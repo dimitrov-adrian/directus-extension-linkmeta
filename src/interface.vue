@@ -4,6 +4,7 @@
     <v-input :disabled="disabled"
              :value="localUrl"
              :placeholder="placeholder"
+             class="url-input"
              @input="inputUrlHandler"
              @change="changeUrlHandler"
     >
@@ -22,34 +23,40 @@
       {{ hasError }}
     </v-notice>
 
-    <v-skeleton-loader v-if="loading"/>
-    <v-list v-else-if="value && typeof value === 'object'" class="preview">
-      <v-list-item
-          v-for="previewItem in preview"
-          v-if="value[previewItem]"
-          :key="previewItem"
-          :class="'preview-item-' + previewItem"
-      >
-        <template v-if="['image', 'logo'].includes(previewItem) && value[previewItem]">
-          <img :src="getImageUrl(value[previewItem])" rel="noopener"/>
-        </template>
-        <template v-else-if="previewItem === 'url' && value[previewItem]">
-          <a :href="value[previewItem]" target="_blank" rel="noopener">
-            {{ value[previewItem] }}
-          </a>
-        </template>
-        <template v-else-if="previewItem === 'iframe' && value[previewItem]">
-          <div class="iframe-wrapper-bound">
-            <div class="iframe-wrapper" v-html="value[previewItem]"></div>
-          </div>
-        </template>
-        <template v-else-if="value[previewItem]">
-          <code>{{ previewItem }} : </code>
-          <var v-if="value[previewItem]">{{ value[previewItem] }}</var>
-          <value-null v-else/>
-        </template>
-      </v-list-item>
-    </v-list>
+    <transition-expand v-if="preview.length > 0">
+      <div v-if="loading">
+        <v-skeleton-loader>
+          <div class="loading-text">{{ $t('loading') }}</div>
+        </v-skeleton-loader>
+      </div>
+      <v-list v-else-if="value && typeof value === 'object'" class="preview">
+        <v-list-item
+            v-for="previewItem in preview"
+            v-if="value[previewItem]"
+            :key="previewItem"
+            :class="'preview-item-' + previewItem"
+        >
+          <template v-if="['image', 'logo'].includes(previewItem) && value[previewItem]">
+            <img :src="getImageUrl(value[previewItem])" rel="noopener"/>
+          </template>
+          <template v-else-if="previewItem === 'url' && value[previewItem]">
+            <a :href="value[previewItem]" target="_blank" rel="noopener">
+              {{ value[previewItem] }}
+            </a>
+          </template>
+          <template v-else-if="previewItem === 'iframe' && value[previewItem]">
+            <div class="iframe-wrapper-bound">
+              <div class="iframe-wrapper" v-html="value[previewItem]"></div>
+            </div>
+          </template>
+          <template v-else-if="value[previewItem]">
+            <code class="property">{{ previewItem }}</code>
+            <var v-if="value[previewItem]">{{ value[previewItem] }}</var>
+            <value-null v-else/>
+          </template>
+        </v-list-item>
+      </v-list>
+    </transition-expand>
 
   </div>
 </template>
@@ -198,6 +205,15 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.url-input {
+  --v-input-font-family: var(--family-monospace);
+}
+
+.loading-text {
+  padding: 1em;
+  text-align: center;
+}
+
 .preview {
   background-color: var(--v-card-background-color);
 }
@@ -209,6 +225,15 @@ export default {
 
 .preview-item-image img {
   height: auto;
+}
+
+.preview .property {
+  font-weight: 600;
+  margin-inline-end: .4em;
+}
+
+.preview .property:after {
+  content: ':'
 }
 
 .preview-item-image img,
