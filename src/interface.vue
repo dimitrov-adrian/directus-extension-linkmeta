@@ -1,35 +1,31 @@
 <template>
   <div>
 
-    <v-input :disabled="disabled"
-             :value="localUrl"
-             :placeholder="placeholder"
-             class="url-input"
-             @input="inputUrlHandler"
-             @change="changeUrlHandler"
+    <v-input
+        :disabled="disabled || loading"
+        :value="localUrl"
+        :placeholder="placeholder"
+        class="url-input"
+        @input="inputUrlHandler"
+        @change="changeUrlHandler"
     >
       <template #prepend>
-        <v-icon name="error" v-if="localUrl && !isUri(localUrl)"/>
+        <v-icon name="sync" v-if="loading" class="loading"/>
+        <v-icon name="priority_high" v-else-if="localUrl && !isUri(localUrl)"/>
         <v-icon name="verified" v-else-if="localUrl && value && value.url && value.url === localUrl"/>
         <v-icon name="link" v-else/>
       </template>
-      <template #append>
-        <v-icon v-if="canRefresh" name="sync" @click="refresh" v-tooltip="$t('update')"/>
+      <template #append v-if="!loading">
+        <v-icon v-if="canRefresh" name="refresh" @click="refresh" v-tooltip="$t('update')"/>
         <v-icon v-else-if="isUri(localUrl)" name="done" @click="changeUrlHandlerFromLocal" v-tooltip="$t('update')"/>
       </template>
     </v-input>
 
-    <v-notice type="warning" v-if="hasError">
-      {{ hasError }}
-    </v-notice>
-
-    <transition-expand v-if="preview.length > 0">
-      <div v-if="loading">
-        <v-skeleton-loader>
-          <div class="loading-text">{{ $t('loading') }}</div>
-        </v-skeleton-loader>
-      </div>
-      <v-list v-else-if="value && typeof value === 'object'" class="preview">
+    <transition-expand>
+      <v-notice type="warning" v-if="hasError">
+        {{ hasError }}
+      </v-notice>
+      <v-list v-if="preview.length > 0 && value && typeof value === 'object'" class="preview">
         <v-list-item
             v-for="previewItem in preview"
             v-if="value[previewItem]"
@@ -138,6 +134,18 @@ export default {
     },
 
     processUrl: function (url) {
+      if (!url) {
+        this.hasError = false
+        this.localUrl = ''
+        this.$emit('input', null)
+        return
+      }
+
+      if (this.localUrl && this.value && this.value.url && this.value.url === this.localUrl && this.hasError) {
+        this.hasError = false
+        return
+      }
+
       if (!this.isUri(url)) {
         this.hasError = 'Invalid URL'
         return
@@ -173,16 +181,11 @@ export default {
     changeUrlHandler: function (event) {
       const url = event.target.value.trim()
       this.localUrl = url
-      if (this.value && this.value.url && this.value.url === url) {
-        return
-      }
       this.processUrl(url)
     },
 
     changeUrlHandlerFromLocal: function () {
-      if (this.localUrl) {
-        this.processUrl(this.localUrl)
-      }
+      this.processUrl(this.localUrl)
     },
 
     inputUrlHandler: function (newValue) {
@@ -205,13 +208,20 @@ export default {
 </script>
 
 <style lang="css" scoped>
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg)
+  }
+}
+
 .url-input {
   --v-input-font-family: var(--family-monospace);
 }
 
-.loading-text {
-  padding: 1em;
-  text-align: center;
+.loading {
+  animation: spin 1s infinite;
+  animation-timing-function: linear;
 }
 
 .preview {
