@@ -1,39 +1,69 @@
 <template>
-	<div>
-
+	<div class="linkpreview">
 		<v-input
-				:disabled="disabled || loading"
-				:placeholder="placeholder"
-				:value="localUrl"
-				class="url-input"
-				@change="changeUrlHandler"
-				@input="inputUrlHandler"
+			:disabled="disabled || loading"
+			:placeholder="placeholder"
+			:value="localUrl"
+			class="url-input"
+			@change="changeUrlHandler"
+			@input="inputUrlHandler"
 		>
 			<template #prepend>
-				<v-icon v-if="loading" class="loading" name="sync"/>
-				<v-icon v-else-if="localUrl && !isUri(localUrl)" name="priority_high"/>
-				<v-icon v-else-if="localUrl && value && value.url && value.url === localUrl" name="verified"/>
-				<v-icon v-else name="link"/>
+				<v-icon v-if="loading" class="loading" name="timelapse" />
+				<v-icon
+					v-else-if="value && value.url && Object.keys(value).length === 1"
+					name="sync_problem"
+					v-tooltip="$t('errors.INVALID_QUERY')"
+				/>
+				<v-icon
+					v-else-if="localUrl && !isUri(localUrl)"
+					name="priority_high"
+					v-tooltip="$t('invalid_url')"
+				/>
+				<v-icon
+					v-else-if="localUrl && value && value.url && value.url === localUrl"
+					name="verified"
+					v-tooltip="$t('success')"
+				/>
+				<v-icon v-else name="link" />
 			</template>
 			<template v-if="!loading" #append>
-				<v-icon v-if="canRefresh" v-tooltip="$t('update')" name="refresh" @click="refresh"/>
-				<v-icon v-else-if="isUri(localUrl)" v-tooltip="$t('update')" name="done" @click="changeUrlHandlerFromLocal"/>
+				<v-icon
+					v-if="canRefresh"
+					v-tooltip="$t('update')"
+					name="refresh"
+					@click="refresh"
+				/>
+				<v-icon
+					v-else-if="isUri(localUrl)"
+					v-tooltip="$t('update')"
+					name="done"
+					@click="changeUrlHandlerFromLocal"
+				/>
 			</template>
 		</v-input>
 
 		<transition-expand>
 			<v-notice v-if="hasError" type="warning">
-				{{ hasError }}
+				{{ hasError }} &nbsp; <a @click="setOnlyUrl" class="a">Set it anyway</a>
 			</v-notice>
-			<v-list v-if="preview.length > 0 && value && typeof value === 'object'" class="preview">
+
+			<v-list
+				v-else-if="
+					preview && preview.length > 0 && value && typeof value === 'object'
+				"
+				class="preview"
+			>
 				<v-list-item
-						v-for="previewItem in preview"
-						v-if="value[previewItem]"
-						:key="previewItem"
-						:class="'preview-item-' + previewItem"
+					v-for="previewItem in preview"
+					v-if="value[previewItem]"
+					:key="previewItem"
+					:class="'preview-item-' + previewItem"
 				>
-					<template v-if="['image', 'logo'].includes(previewItem) && value[previewItem]">
-						<img :src="getImageUrl(value[previewItem])" rel="noopener"/>
+					<template
+						v-if="['image', 'logo'].includes(previewItem) && value[previewItem]"
+					>
+						<img :src="getImageUrl(value[previewItem])" rel="noopener" />
 					</template>
 					<template v-else-if="previewItem === 'url' && value[previewItem]">
 						<a :href="value[previewItem]" rel="noopener" target="_blank">
@@ -48,48 +78,61 @@
 					<template v-else-if="value[previewItem]">
 						<code class="property">{{ previewItem }}</code>
 						<var v-if="value[previewItem]">{{ value[previewItem] }}</var>
-						<value-null v-else/>
+						<value-null v-else />
 					</template>
 				</v-list-item>
 			</v-list>
 		</transition-expand>
-
 	</div>
 </template>
 
 <script>
-import validUrl from 'valid-url';
+import validUrl from "valid-url";
 
 export default {
-	inject: ['system'],
+	inject: ["system"],
 	props: {
 		value: {
 			type: Object,
-			default: () => ({}),
+			default: () => ({})
 		},
 		disabled: {
 			type: Boolean,
-			default: false,
+			default: false
 		},
 		placeholder: {
 			type: String,
-			default: null,
+			default: null
 		},
 		service: {
 			type: String,
-			default: '',
+			default: ""
 		},
 		preview: {
 			type: Array,
-			default: () => ['image', 'title', 'url'],
+			default: () => ["image", "title", "url"]
 		},
+		store: {
+			type: Array,
+			default: () => [
+				"image",
+				"url",
+				"title",
+				"publisher",
+				"author",
+				"date",
+				"lang",
+				"logo",
+				"iframe"
+			]
+		}
 	},
 
 	data: function() {
 		return {
 			loading: false,
 			localUrl: this.value?.url,
-			hasError: false,
+			hasError: false
 		};
 	},
 
@@ -98,17 +141,18 @@ export default {
 			if (!oldVal && newVal.url) {
 				this.localUrl = newVal.url.trim();
 			}
-		},
+		}
 	},
 
 	computed: {
 		canRefresh: function() {
-			return this.value?.url && this.localUrl && this.localUrl === this.value?.url;
-		},
+			return (
+				this.value?.url && this.localUrl && this.localUrl === this.value?.url
+			);
+		}
 	},
 
 	methods: {
-
 		isUri: validUrl.isWebUri,
 
 		refresh: function() {
@@ -118,26 +162,40 @@ export default {
 		},
 
 		processUrlByMicrolink: function(url) {
-			return this.system.axios.get(`https://api.microlink.io?url=${encodeURIComponent(url)}`, {
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			});
+			return this.system.axios.get(
+				`https://api.microlink.io?url=${encodeURIComponent(url)}`,
+				{
+					headers: {
+						"Content-Type": "application/json"
+					}
+				}
+			);
 		},
 
 		processUrlByExtension: function(url) {
-			return this.system.api.get(`/custom/directus-extension-linkpreview-endpoint?url=${encodeURIComponent(url)}`, {
-				headers: {
-					'Content-Type': 'application/json',
-				},
+			return this.system.api.get(
+				`/custom/directus-extension-linkpreview-endpoint?url=${encodeURIComponent(
+					url
+				)}`,
+				{
+					headers: {
+						"Content-Type": "application/json"
+					}
+				}
+			);
+		},
+
+		setOnlyUrl: function() {
+			this.$emit("input", {
+				url: this.localUrl
 			});
 		},
 
 		processUrl: function(url) {
 			if (!url) {
 				this.hasError = false;
-				this.localUrl = '';
-				this.$emit('input', null);
+				this.localUrl = "";
+				this.$emit("input", null);
 				return;
 			}
 
@@ -147,30 +205,47 @@ export default {
 			}
 
 			if (!this.isUri(url)) {
-				this.hasError = 'Invalid URL';
+				this.hasError = "Invalid URL";
 				return;
 			}
 
 			this.loading = true;
 			this.hasError = false;
 
-			const requester = {
-				microlink: this.processUrlByMicrolink,
-			}[this.$props.service] || this.processUrlByExtension;
+			const requester =
+				{
+					microlink: this.processUrlByMicrolink
+				}[this.$props.service] || this.processUrlByExtension;
 
-			requester(url).then(response => response.data).then(response => {
-				this.loading = false;
-				if (response.status === 'success' && response.data) {
-					return response.data;
-				} else {
-					throw Error(response.message);
-				}
-			}).then(data => {
-				this.localUrl = url;
-				this.$emit('input', data);
-			}).catch((error) => {
-				this.hasError = error.toString();
-			});
+			requester(url)
+				.then(response => response.data)
+				.then(response => {
+					this.loading = false;
+					if (response.status === "success" && response.data) {
+						return response.data;
+					} else {
+						throw Error(response.message);
+					}
+				})
+				.then(data => {
+					this.localUrl = url;
+					if (this.store && this.store.length > 0) {
+						const result = {
+							url: url
+						};
+						for (const key of this.store) {
+							if (data[key]) {
+								result[key] = data[key];
+							}
+						}
+						this.$emit("input", result);
+					} else {
+						this.$emit("input", data);
+					}
+				})
+				.catch(error => {
+					this.hasError = error.toString();
+				});
 		},
 
 		changeUrlHandler: function(event) {
@@ -188,30 +263,55 @@ export default {
 		},
 
 		getImageUrl: function(imageObject) {
-			if (typeof imageObject === 'string') {
+			if (typeof imageObject === "string") {
 				return imageObject;
 			} else {
-				if (typeof imageObject === 'object' && imageObject.url) {
+				if (typeof imageObject === "object" && imageObject.url) {
 					return imageObject.url;
 				} else {
 					return null;
 				}
 			}
-		},
-	},
+		}
+	}
 };
 </script>
 
 <style lang="css" scoped>
-
 @keyframes spin {
 	100% {
-		transform: rotate(360deg)
+		transform: rotate(360deg);
 	}
+}
+
+.linkpreview {
+	border: var(--border-width) solid var(--border-normal);
+	border-radius: var(--border-radius);
+}
+
+.linkpreview:hover {
+	color: var(--v-input-color);
+	background-color: var(--background-page);
+	border-color: var(--border-normal-alt);
+}
+
+.linkpreview:focus-within {
+	color: var(--v-input-color);
+	background-color: var(--background-page);
+	border-color: var(--primary);
+}
+
+.a {
+	cursor: pointer;
+	text-decoration: underline;
 }
 
 .url-input {
 	--v-input-font-family: var(--family-monospace);
+}
+
+.url-input >>> .input {
+	border: none;
 }
 
 .loading {
@@ -221,6 +321,9 @@ export default {
 
 .preview {
 	background-color: var(--v-card-background-color);
+	border-top-right-radius: 0;
+	border-top-left-radius: 0;
+	border-top: var(--border-width) solid var(--border-normal);
 }
 
 .preview a {
@@ -234,11 +337,11 @@ export default {
 
 .preview .property {
 	font-weight: 600;
-	margin-inline-end: .4em;
+	margin-inline-end: 0.4em;
 }
 
 .preview .property:after {
-	content: ':'
+	content: ":";
 }
 
 .preview-item-image img,
@@ -261,4 +364,3 @@ export default {
 	height: 100% !important;
 }
 </style>
-
