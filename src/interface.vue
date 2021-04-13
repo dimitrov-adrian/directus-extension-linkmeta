@@ -45,7 +45,7 @@
 
 		<transition-expand>
 			<v-notice v-if="hasError" type="warning">
-				{{ hasError }} &nbsp; <a @click="setOnlyUrl" class="a">Set it anyway</a>
+				{{ hasError }}
 			</v-notice>
 
 			<v-list
@@ -87,7 +87,9 @@
 </template>
 
 <script>
-import validUrl from "valid-url";
+function escapeRegExp(string) {
+	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 export default {
 	inject: ["system"],
@@ -107,6 +109,10 @@ export default {
 		service: {
 			type: String,
 			default: ""
+		},
+		url_allowlist: {
+			type: Array,
+			default: () => []
 		},
 		preview: {
 			type: Array,
@@ -129,10 +135,15 @@ export default {
 	},
 
 	data: function() {
+		const patterns = this.url_allowlist.map(
+			pattern => new RegExp(escapeRegExp(pattern).replace(/\\\*/giu, ".*"), "i")
+		);
+
 		return {
 			loading: false,
 			localUrl: this.value?.url,
-			hasError: false
+			hasError: false,
+			patterns
 		};
 	},
 
@@ -153,7 +164,19 @@ export default {
 	},
 
 	methods: {
-		isUri: validUrl.isWebUri,
+		isUri: function(url) {
+			try {
+				new URL(url);
+			} catch (error) {
+				return false;
+			}
+			return true;
+		},
+
+		isUriAllowed: function(url) {
+			if (!this.patterns || this.patterns.length < 1) return true;
+			return this.patterns.some(pattern => pattern.test(url));
+		},
 
 		refresh: function() {
 			if (this.value?.url) {
@@ -185,12 +208,6 @@ export default {
 			);
 		},
 
-		setOnlyUrl: function() {
-			this.$emit("input", {
-				url: this.localUrl
-			});
-		},
-
 		processUrl: function(url) {
 			if (!url) {
 				this.hasError = false;
@@ -206,6 +223,11 @@ export default {
 
 			if (!this.isUri(url)) {
 				this.hasError = "Invalid URL";
+				return;
+			}
+
+			if (!this.isUriAllowed(url)) {
+				this.hasError = "URL is not allowed";
 				return;
 			}
 

@@ -40,6 +40,20 @@ export default {
 			}
 		},
 		{
+			field: "url_allowlist",
+			name: "URL Allow List ",
+			type: "string",
+			meta: {
+				width: "full",
+				interface: "tags",
+				options: {
+					placeholder:
+						"Add allowed URLs, leave empty to allow all. (eg: example.com/*/embed)",
+					iconRight: "filter_alt"
+				}
+			}
+		},
+		{
 			field: "preview",
 			name: "Preview",
 			type: "csv",
