@@ -27,7 +27,7 @@ export default {
 			type: "string",
 			meta: {
 				width: "half",
-				interface: "dropdown",
+				interface: "select-dropdown",
 				options: {
 					choices: [
 						{ value: "", text: "LinkPreview Extension" },
@@ -62,7 +62,7 @@ export default {
 			},
 			meta: {
 				width: "half",
-				interface: "dropdown-multiselect",
+				interface: "select-multiple-dropdown",
 				options: {
 					placeholder: "None",
 					choices: [
@@ -88,7 +88,7 @@ export default {
 			},
 			meta: {
 				width: "half",
-				interface: "dropdown-multiselect",
+				interface: "select-multiple-dropdown",
 				options: {
 					allowNone: true,
 					placeholder: "All",

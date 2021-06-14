@@ -45,7 +45,7 @@
 
 		<transition-expand>
 			<v-notice v-if="hasError" type="warning">
-				{{ hasError }}
+				{{ hasError }} &nbsp; <a @click="setOnlyUrl" class="a">Set it anyway</a>
 			</v-notice>
 
 			<v-list
@@ -170,10 +170,6 @@ export default {
 			} catch (error) {
 				return false;
 			}
-			return true;
-		},
-
-		isUriAllowed: function(url) {
 			if (!this.patterns || this.patterns.length < 1) return true;
 			return this.patterns.some(pattern => pattern.test(url));
 		},
@@ -197,15 +193,19 @@ export default {
 
 		processUrlByExtension: function(url) {
 			return this.system.api.get(
-				`/custom/directus-extension-linkpreview-endpoint?url=${encodeURIComponent(
-					url
-				)}`,
+				`/custom/linkpreview?url=${encodeURIComponent(url)}`,
 				{
 					headers: {
 						"Content-Type": "application/json"
 					}
 				}
 			);
+		},
+
+		setOnlyUrl: function() {
+			this.$emit("input", {
+				url: this.localUrl
+			});
 		},
 
 		processUrl: function(url) {
@@ -223,11 +223,6 @@ export default {
 
 			if (!this.isUri(url)) {
 				this.hasError = "Invalid URL";
-				return;
-			}
-
-			if (!this.isUriAllowed(url)) {
-				this.hasError = "URL is not allowed";
 				return;
 			}
 

@@ -4,7 +4,7 @@ import commonjs from "rollup-plugin-commonjs";
 import vue from "rollup-plugin-vue";
 
 export default {
-	input: "src/index.js",
+	input: "interface/src/index.js",
 	output: {
 		format: "es",
 		file: "dist/extensions/interfaces/linkpreview/index.js"
