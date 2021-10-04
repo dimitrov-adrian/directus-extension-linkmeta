@@ -1,111 +1,179 @@
-import Interface from "./interface.vue";
+import { defineInterface } from '@directus/shared/utils';
+import InterfaceComponent from './interface.vue';
 
-export default {
-	id: "extension-linkpreview",
-	name: "Link Preview",
-	description:
-		"Store link metadata using Open Graph, JSON+LD, oEmbed or HTML metadata",
-	icon: "preview",
-	component: Interface,
-	recommendedDisplays: ["formatted-json-value"],
-	types: ["json"],
+export default defineInterface({
+	id: 'extension-linkmeta',
+	name: 'Link Meta',
+	description: 'Store link metadata using Open Graph, JSON+LD, oEmbed or HTML metadata',
+	icon: 'link',
+	component: InterfaceComponent,
+	recommendedDisplays: ['formatted-json-value'],
+	types: ['json'],
 	options: [
 		{
-			field: "placeholder",
-			name: "Placeholder",
+			field: 'placeholder',
+			name: '$t:placeholder',
 			meta: {
-				width: "half",
-				interface: "text-input"
+				width: 'full',
+				interface: 'text-input',
+				options: {
+					placeholder: '$t:enter_a_placeholder',
+				},
 			},
 			schema: {
-				default_value: "Enter link URL..."
-			}
+				default_value: '',
+			},
 		},
 		{
-			field: "service",
-			name: "Scrape Service",
-			type: "string",
+			field: 'trigger',
+			name: '$t:interfaces.input-autocomplete-api.trigger',
+			type: 'string',
+			schema: {
+				default_value: 'debounce',
+			},
 			meta: {
-				width: "half",
-				interface: "select-dropdown",
+				width: 'half',
+				interface: 'select-dropdown',
 				options: {
 					choices: [
-						{ value: "", text: "LinkPreview Extension" },
-						{ value: "microlink", text: "microlink.io" }
-					]
-				}
+						{
+							text: 'Throttle',
+							value: 'throttle',
+						},
+						{
+							text: 'Debounce',
+							value: 'debounce',
+						},
+					],
+				},
 			},
-			schema: {
-				default_value: ""
-			}
 		},
 		{
-			field: "url_allowlist",
-			name: "URL Allow List ",
-			type: "string",
-			meta: {
-				width: "full",
-				interface: "tags",
-				options: {
-					placeholder:
-						"Add allowed URLs, leave empty to allow all. (eg: example.com/*/embed)",
-					iconRight: "filter_alt"
-				}
-			}
-		},
-		{
-			field: "preview",
-			name: "Preview",
-			type: "csv",
+			field: 'rate',
+			name: '$t:interfaces.input-autocomplete-api.rate',
+			type: 'integer',
 			schema: {
-				default_value: ["image", "url", "title"]
+				default_value: 500,
 			},
 			meta: {
-				width: "half",
-				interface: "select-multiple-dropdown",
+				width: 'half',
+				interface: 'input',
+			},
+		},
+		{
+			field: 'url_allowlist',
+			name: 'URL Allow List ',
+			type: 'string',
+			meta: {
+				width: 'full',
+				interface: 'tags',
 				options: {
-					placeholder: "None",
+					placeholder: 'Add allowed URLs, leave empty to allow all. (eg: example.com/*/embed)',
+					iconRight: 'filter_alt',
+				},
+			},
+		},
+		{
+			field: 'preview',
+			name: '$t:layout_preview',
+			type: 'csv',
+			schema: {
+				default_value: ['image', 'title'],
+			},
+			meta: {
+				width: 'half',
+				interface: 'select-multiple-dropdown',
+				options: {
+					placeholder: '$t:none',
 					choices: [
-						{ value: "image", text: "image" },
-						{ value: "url", text: "url" },
-						{ value: "title", text: "title" },
-						{ value: "publisher", text: "publisher" },
-						{ value: "author", text: "author" },
-						{ value: "date", text: "date" },
-						{ value: "lang", text: "lang" },
-						{ value: "logo", text: "logo" },
-						{ value: "iframe", text: "iframe" }
-					]
-				}
-			}
+						{ value: 'image', text: 'image' },
+						{ value: 'title', text: 'title' },
+						{ value: 'publisher', text: 'publisher' },
+						{ value: 'author', text: 'author' },
+						{ value: 'audio', text: 'audio' },
+						{ value: 'date', text: 'date' },
+						{ value: 'lang', text: 'lang' },
+						{ value: 'logo', text: 'logo' },
+						{ value: 'video', text: 'video' },
+						{ value: 'iframe', text: 'iframe' },
+					],
+				},
+			},
 		},
 		{
-			field: "store",
-			name: "Store Only",
-			type: "csv",
+			field: 'store',
+			name: '$t:save',
+			type: 'csv',
 			schema: {
-				default_value: []
+				default_value: [],
 			},
 			meta: {
-				width: "half",
-				interface: "select-multiple-dropdown",
+				width: 'half',
+				interface: 'select-multiple-dropdown',
 				options: {
 					allowNone: true,
-					placeholder: "All",
+					placeholder: '$t:all',
 					choices: [
-						{ value: "image", text: "image" },
-						{ value: "title", text: "title" },
-						{ value: "publisher", text: "publisher" },
-						{ value: "author", text: "author" },
-						{ value: "audio", text: "author" },
-						{ value: "date", text: "date" },
-						{ value: "lang", text: "lang" },
-						{ value: "logo", text: "logo" },
-						{ value: "video", text: "video" },
-						{ value: "iframe", text: "iframe" }
-					]
-				}
-			}
-		}
-	]
-};
+						{ value: 'image', text: 'image' },
+						{ value: 'title', text: 'title' },
+						{ value: 'publisher', text: 'publisher' },
+						{ value: 'author', text: 'author' },
+						{ value: 'audio', text: 'audio' },
+						{ value: 'date', text: 'date' },
+						{ value: 'lang', text: 'lang' },
+						{ value: 'logo', text: 'logo' },
+						{ value: 'video', text: 'video' },
+						{ value: 'iframe', text: 'iframe' },
+					],
+				},
+			},
+		},
+		{
+			field: 'service',
+			name: 'Scrape Service',
+			type: 'string',
+			meta: {
+				width: 'half',
+				interface: 'select-dropdown',
+				options: {
+					choices: [
+						{ value: '', text: 'LinkMeta Extension' },
+						{ value: 'api.microlink.io', text: 'microlink.io (Free)' },
+						{ value: 'pro.microlink.io', text: 'microlink.io (Pro)' },
+					],
+					allowOther: true,
+				},
+			},
+			schema: {
+				default_value: '',
+			},
+		},
+		{
+			field: 'apikey',
+			name: '$t:key',
+			meta: {
+				width: 'full',
+				interface: 'text-input',
+				options: {
+					placeholder: '$t:fields.directus_users.token_placeholder',
+					iconLeft: 'vpn_key',
+					font: 'monospace',
+				},
+				conditions: [
+					{
+						name: 'hide',
+						rule: {
+							service: {
+								_eq: '',
+							},
+						},
+						hidden: true,
+					},
+				],
+			},
+			schema: {
+				default_value: '',
+			},
+		},
+	],
+});

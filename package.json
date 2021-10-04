@@ -1,45 +1,51 @@
 {
-  "name": "directus-extension-linkpreview",
-  "version": "1.0.0-beta",
+  "name": "directus-extension-linkmeta",
+  "version": "1.0.0-beta.5",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dimitrov-adrian/directus-extension-linkmeta.git"
+  },
   "author": {
-    "email": "dimitrov.adrian@gmail.com",
+    "email": "dimitrov.adrian+gh@gmail.com",
     "name": "Adrian Dimitrov"
   },
+  "directus:extension": {
+    "type": "pack",
+    "hidden": false,
+    "path": ".",
+    "source": ".",
+    "host": "^v9.0.0-rc.95"
+  },
   "scripts": {
-    "endpoint:test": "node endpoint/test.js",
-    "interface:build": "rollup -c interface/rollup.config.js",
-    "interface:dev": "npm run interface:build -- -w"
+    "dev:interface": "cd interface && npx directus-extension build -w",
+    "build:interface": "cd interface && npx directus-extension build",
+    "test:endpoint": "node endpoint/test.js"
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "metascraper": "^5.16.16",
-    "metascraper-amazon": "^5.16.16",
-    "metascraper-audio": "^5.16.16",
-    "metascraper-author": "^5.16.16",
-    "metascraper-clearbit": "^5.16.16",
-    "metascraper-date": "^5.16.16",
-    "metascraper-description": "^5.16.16",
-    "metascraper-iframe": "^5.16.16",
-    "metascraper-image": "^5.16.16",
-    "metascraper-lang": "^5.16.16",
-    "metascraper-logo": "^5.16.16",
-    "metascraper-logo-favicon": "^5.16.16",
-    "metascraper-publisher": "^5.16.16",
-    "metascraper-readability": "^5.16.16",
-    "metascraper-soundcloud": "^5.16.16",
-    "metascraper-spotify": "^5.16.16",
-    "metascraper-title": "^5.16.16",
-    "metascraper-url": "^5.16.16",
-    "metascraper-video": "^5.16.16",
-    "metascraper-youtube": "^5.16.16",
-    "valid-url": "^1.0.9"
+    "directus-extension-linkmeta-interface": "file:./interface",
+    "directus-extension-linkmeta-endpoint": "file:./endpoint",
+    "metascraper": "^5.24.8",
+    "metascraper-amazon": "^5.24.8",
+    "metascraper-audio": "^5.24.8",
+    "metascraper-author": "^5.24.8",
+    "metascraper-clearbit": "^5.24.8",
+    "metascraper-date": "^5.24.8",
+    "metascraper-description": "^5.24.8",
+    "metascraper-iframe": "^5.24.8",
+    "metascraper-image": "^5.24.8",
+    "metascraper-lang": "^5.24.8",
+    "metascraper-logo": "^5.24.8",
+    "metascraper-logo-favicon": "^5.24.8",
+    "metascraper-publisher": "^5.24.8",
+    "metascraper-readability": "^5.24.8",
+    "metascraper-soundcloud": "^5.24.8",
+    "metascraper-spotify": "^5.24.8",
+    "metascraper-title": "^5.24.8",
+    "metascraper-url": "^5.24.8",
+    "metascraper-video": "^5.24.8",
+    "metascraper-youtube": "^5.24.8"
   },
   "devDependencies": {
-    "rollup": "^2.51.1",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-vue": "~5.1.9",
-    "vue-template-compiler": "^2.6.14"
+    "@directus/extensions-sdk": "^9.0.0-rc.95"
   }
 }

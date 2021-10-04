@@ -1,19 +1,13 @@
-# LinkPreview Extension Bundle
+> ### This extension is in development and most probably will have file structure change when Directus 9 official releases. Meanwhile breaking changes are possible in anytime.
 
 ![](https://repository-images.githubusercontent.com/318790147/a5879480-cd17-11eb-8375-7c68f2d2ebab)
 
-> ### This extension is in development and could have breaking changes until Directus 9 official releases.
+## Installation
 
-## How to install
-
-This extension is from two parts - interface and endpoint, in order to get work as expected,
-you need to install both of them. In theory each could works independans, but the point is not this.
+In your Directus installation root
 
 ```bash
-cd <your directus project>/extensions
-git clone https://github.com/dimitrov-adrian/directus-extension-linkpreview endpoints/linkpreview
-(cd endpoints/linkpreview && npm i)
-(cd interfaces && ln -s ../endpoints/linkpreview/dist/extensions/interfaces/linkpreview .)
+npm install dimitrov-adrian/directus-extension-linkmeta
 ```
 
 Restart directus
@@ -23,4 +17,17 @@ Restart directus
 The interface extension uses `JSON` type to store metadata.
 
 1. Create new standard field with JSON type
-2. For interface select **LinkPreview** and set **LinkPreview Extension** for scrape service
+2. For interface select **LinkMeta** and set **LinkMeta Extension** for scrape service
+
+## FAQ
+
+### What a the api.microlink.io and pro.microlink.io options?
+
+These options make requests to https://microlink.io/ service API. The hosted solution has some benefits like better
+performance because of cache in their side. You could take a look on their site. And the pro version requires custom API
+token to be set.
+
+### What service to choose?
+
+Except if you not need some super performance and analytics to be made, inhouse extension service (selected by default)
+is best bang.

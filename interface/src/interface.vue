@@ -1,84 +1,65 @@
 <template>
-	<div class="linkpreview">
+	<div class="linkmeta">
 		<v-input
-			:disabled="disabled || loading"
+			:disabled="disabled"
+			:autofocus="autofocus"
 			:placeholder="placeholder"
-			:value="localUrl"
+			:model-value="localUrl"
+			@update:model-value="onChange"
 			class="url-input"
-			@change="changeUrlHandler"
-			@input="inputUrlHandler"
 		>
 			<template #prepend>
-				<v-icon v-if="loading" class="loading" name="timelapse" />
-				<v-icon
-					v-else-if="value && value.url && Object.keys(value).length === 1"
-					name="sync_problem"
-					v-tooltip="$t('errors.INVALID_QUERY')"
-				/>
-				<v-icon
-					v-else-if="localUrl && !isUri(localUrl)"
-					name="priority_high"
-					v-tooltip="$t('invalid_url')"
-				/>
-				<v-icon
-					v-else-if="localUrl && value && value.url && value.url === localUrl"
-					name="verified"
-					v-tooltip="$t('success')"
-				/>
+				<v-icon v-if="loading" class="loading" name="data_usage" v-tooltip="t('loading')" />
+				<v-icon v-else-if="localUrl && !isValidUrl" name="priority_high" v-tooltip="t('errors.INVALID_QUERY')" />
+				<v-icon v-else-if="!isChanged" name="verified" v-tooltip="t('success')" />
 				<v-icon v-else name="link" />
 			</template>
+
 			<template v-if="!loading" #append>
-				<v-icon
-					v-if="canRefresh"
-					v-tooltip="$t('update')"
-					name="refresh"
-					@click="refresh"
-				/>
-				<v-icon
-					v-else-if="isUri(localUrl)"
-					v-tooltip="$t('update')"
-					name="done"
-					@click="changeUrlHandlerFromLocal"
-				/>
+				<v-icon v-if="canRefresh" v-tooltip="t('update')" name="refresh" @click="onRefresh" />
 			</template>
 		</v-input>
 
 		<transition-expand>
-			<v-notice v-if="hasError" type="warning">
-				{{ hasError }} &nbsp; <a @click="setOnlyUrl" class="a">Set it anyway</a>
+			<v-notice v-if="error" type="warning" class="noround">
+				{{ error }}
+				<div class="spacer" />
+				<button v-if="isChanged" @click="() => emit('input', { url: localUrl })">Set it anyway</button>
 			</v-notice>
 
-			<v-list
-				v-else-if="
-					preview && preview.length > 0 && value && typeof value === 'object'
-				"
-				class="preview"
+			<v-notice
+				v-else-if="localValue && localValue.url && Object.keys(localValue).length === 1"
+				type="warning"
+				class="noround"
 			>
-				<v-list-item
-					v-for="previewItem in preview"
-					v-if="value[previewItem]"
-					:key="previewItem"
-					:class="'preview-item-' + previewItem"
-				>
-					<template
-						v-if="['image', 'logo'].includes(previewItem) && value[previewItem]"
-					>
-						<img :src="getImageUrl(value[previewItem])" rel="noopener" />
-					</template>
-					<template v-else-if="previewItem === 'url' && value[previewItem]">
-						<a :href="value[previewItem]" rel="noopener" target="_blank">
-							{{ value[previewItem] }}
-						</a>
-					</template>
-					<template v-else-if="previewItem === 'iframe' && value[previewItem]">
-						<div class="iframe-wrapper-bound">
-							<div class="iframe-wrapper" v-html="value[previewItem]"></div>
-						</div>
-					</template>
-					<template v-else-if="value[previewItem]">
+				{{ t('errors.INVALID_PAYLOAD') }}
+			</v-notice>
+
+			<v-list v-else-if="preview.length > 0 && localValue" class="preview">
+				<v-list-item v-for="previewItem in preview" :key="previewItem" :class="'preview-item-' + previewItem">
+					<template v-if="!localValue[previewItem]">
 						<code class="property">{{ previewItem }}</code>
-						<var v-if="value[previewItem]">{{ value[previewItem] }}</var>
-						<value-null v-else />
+						<value-null />
+					</template>
+					<img
+						v-else-if="['image', 'logo'].includes(previewItem) && localValue[previewItem]"
+						:src="getImageUrl(localValue[previewItem])"
+						rel="noopener"
+					/>
+					<a
+						v-else-if="previewItem === 'url' && localValue[previewItem]"
+						:href="localValue[previewItem]"
+						rel="noopener"
+						target="_blank"
+					>
+						{{ localValue[previewItem] }}
+					</a>
+					<div v-else-if="previewItem === 'iframe' && localValue[previewItem]" class="iframe-wrapper-bound">
+						<div class="iframe-wrapper" v-html="localValue[previewItem]"></div>
+					</div>
+					<template v-else-if="localValue[previewItem]">
+						<code class="property">{{ previewItem }}</code>
+						<var>{{ localValue[previewItem] }}</var>
 					</template>
 				</v-list-item>
 			</v-list>
@@ -87,211 +68,234 @@
 </template>
 
 <script>
-function escapeRegExp(string) {
-	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+import axios from 'axios';
+import { throttle, debounce } from 'lodash';
+import { useI18n } from 'vue-i18n';
+import { defineComponent, ref, watch, computed, inject } from 'vue';
 
-export default {
-	inject: ["system"],
+export default defineComponent({
+	emits: ['input'],
 	props: {
 		value: {
 			type: Object,
-			default: () => ({})
+			default: () => ({}),
 		},
 		disabled: {
 			type: Boolean,
-			default: false
+			default: false,
+		},
+		autofocus: {
+			type: Boolean,
+			default: false,
 		},
 		placeholder: {
 			type: String,
-			default: null
+			default: null,
+		},
+		trigger: {
+			type: String,
+			default: 'debounce',
+		},
+		rate: {
+			type: [Number, String],
+			default: 500,
 		},
 		service: {
 			type: String,
-			default: ""
+			default: '',
 		},
-		url_allowlist: {
+		apikey: {
+			type: String,
+			default: '',
+		},
+		urlAllowList: {
 			type: Array,
-			default: () => []
+			default: () => [],
 		},
 		preview: {
 			type: Array,
-			default: () => ["image", "title", "url"]
+			default: () => ['image', 'title', 'url'],
 		},
 		store: {
 			type: Array,
-			default: () => [
-				"image",
-				"url",
-				"title",
-				"publisher",
-				"author",
-				"date",
-				"lang",
-				"logo",
-				"iframe"
-			]
-		}
+			default: () => ['image', 'url', 'title', 'publisher', 'author', 'date', 'lang', 'logo', 'iframe'],
+		},
 	},
 
-	data: function() {
-		const patterns = this.url_allowlist.map(
-			pattern => new RegExp(escapeRegExp(pattern).replace(/\\\*/giu, ".*"), "i")
+	setup(props, { emit }) {
+		const { t } = useI18n();
+		const api = inject('api');
+		const error = ref(null);
+		const loading = ref(false);
+		const localUrl = ref(props.value && props.value.url ? props.value.url : '');
+		const localValue = ref(props.value);
+		const isValidUrl = computed(() => localUrl.value && isUrl(localUrl.value));
+		const isChanged = computed(() => localUrl !== (props.value && props.value.url ? props.value.url : ''));
+		const canRefresh = computed(
+			() =>
+				isValidUrl.value &&
+				props.value &&
+				props.value.url &&
+				localValue.value &&
+				localValue.value.url &&
+				localValue.value.url === props.value.url
 		);
 
-		return {
-			loading: false,
-			localUrl: this.value?.url,
-			hasError: false,
-			patterns
-		};
-	},
+		const patterns = props.urlAllowList.map(
+			(pattern) => new RegExp(escapeRegExp(pattern).replace(/\\\*/giu, '.*'), 'i')
+		);
 
-	watch: {
-		value: function(newVal, oldVal) {
-			if (!oldVal && newVal.url) {
-				this.localUrl = newVal.url.trim();
+		watch(
+			() => props.value,
+			(newVal, oldVal) => {
+				if (oldVal === newVal) return;
+
+				if (!newVal) {
+					localUrl.value = '';
+					localValue.value = {};
+				} else if (newVal && newVal.url) {
+					localUrl.value = newVal.url;
+					localValue.value = newVal;
+				}
 			}
-		}
-	},
+		);
 
-	computed: {
-		canRefresh: function() {
-			return (
-				this.value?.url && this.localUrl && this.localUrl === this.value?.url
-			);
-		}
-	},
+		const fetchResults =
+			props.trigger === 'debounce'
+				? debounce(processUrl, Number(props.rate))
+				: throttle(processUrl, Number(props.rate));
 
-	methods: {
-		isUri: function(url) {
+		return {
+			t,
+
+			error,
+			loading,
+
+			localUrl,
+			localValue,
+
+			isValidUrl,
+			isChanged,
+			isUrl,
+			canRefresh,
+
+			getImageUrl,
+
+			onRefresh,
+			onChange,
+		};
+
+		function onChange(newUrl) {
+			if (!newUrl) {
+				localUrl.value = '';
+				localValue.value = null;
+				return;
+			}
+			localUrl.value = newUrl.trim();
+			fetchResults(localUrl.value);
+		}
+
+		function onRefresh() {
+			if (localUrl.value && !isValidUrl.value) return;
+			processUrl(localUrl.value);
+		}
+
+		function isUrl(url) {
 			try {
 				new URL(url);
-			} catch (error) {
+			} catch {
 				return false;
 			}
-			if (!this.patterns || this.patterns.length < 1) return true;
-			return this.patterns.some(pattern => pattern.test(url));
-		},
 
-		refresh: function() {
-			if (this.value?.url) {
-				this.processUrl(this.value.url);
-			}
-		},
+			if (!patterns || patterns.length < 1) return true;
+		}
 
-		processUrlByMicrolink: function(url) {
-			return this.system.axios.get(
-				`https://api.microlink.io?url=${encodeURIComponent(url)}`,
-				{
-					headers: {
-						"Content-Type": "application/json"
-					}
-				}
-			);
-		},
-
-		processUrlByExtension: function(url) {
-			return this.system.api.get(
-				`/custom/linkpreview?url=${encodeURIComponent(url)}`,
-				{
-					headers: {
-						"Content-Type": "application/json"
-					}
-				}
-			);
-		},
-
-		setOnlyUrl: function() {
-			this.$emit("input", {
-				url: this.localUrl
-			});
-		},
-
-		processUrl: function(url) {
+		function processUrl(url) {
 			if (!url) {
-				this.hasError = false;
-				this.localUrl = "";
-				this.$emit("input", null);
+				error.value = null;
+				localUrl.value = '';
+				emit('input', null);
 				return;
 			}
 
-			if (this.localUrl && this.value?.url === this.localUrl && this.hasError) {
-				this.hasError = false;
+			if (!isUrl(url)) {
+				error.value = t('errors.INVALID_QUERY');
 				return;
 			}
 
-			if (!this.isUri(url)) {
-				this.hasError = "Invalid URL";
+			if (patterns.some((pattern) => pattern.test(url))) {
+				error.value = t('validationError.neq').replace('{invalid}', url);
 				return;
 			}
 
-			this.loading = true;
-			this.hasError = false;
+			loading.value = true;
+			error.value = null;
 
-			const requester =
-				{
-					microlink: this.processUrlByMicrolink
-				}[this.$props.service] || this.processUrlByExtension;
+			return createFetcher(url)
+				.then((response) => response.data)
+				.then((response) => {
+					if (response.status === 'success' && response.data) return response.data;
 
-			requester(url)
-				.then(response => response.data)
-				.then(response => {
-					this.loading = false;
-					if (response.status === "success" && response.data) {
-						return response.data;
-					} else {
-						throw Error(response.message);
-					}
+					throw Error(response.message);
 				})
-				.then(data => {
-					this.localUrl = url;
-					if (this.store && this.store.length > 0) {
-						const result = {
-							url: url
-						};
-						for (const key of this.store) {
-							if (data[key]) {
+				.then((data) => {
+					if (props.store && props.store.length > 0) {
+						const result = {};
+						for (const key of props.store) {
+							if (key in data) {
 								result[key] = data[key];
 							}
 						}
-						this.$emit("input", result);
-					} else {
-						this.$emit("input", data);
+						return result;
 					}
+
+					return data;
 				})
-				.catch(error => {
-					this.hasError = error.toString();
+				.then((data) => {
+					// Store original URL
+					data.url = url;
+					emit('input', data);
+					return data;
+				})
+				.catch((err) => {
+					error.value = err.toString();
+				})
+				.finally(() => {
+					loading.value = false;
 				});
-		},
-
-		changeUrlHandler: function(event) {
-			const url = event.target.value.trim();
-			this.localUrl = url;
-			this.processUrl(url);
-		},
-
-		changeUrlHandlerFromLocal: function() {
-			this.processUrl(this.localUrl);
-		},
-
-		inputUrlHandler: function(newValue) {
-			this.localUrl = newValue;
-		},
-
-		getImageUrl: function(imageObject) {
-			if (typeof imageObject === "string") {
-				return imageObject;
-			} else {
-				if (typeof imageObject === "object" && imageObject.url) {
-					return imageObject.url;
-				} else {
-					return null;
-				}
-			}
 		}
-	}
-};
+
+		function createFetcher(url) {
+			if (!props.service) {
+				return api.get(`/directus-extension-linkmeta-endpoint?url=${encodeURIComponent(url)}`, {
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				});
+			}
+
+			const headers = {
+				'Content-Type': 'application/json',
+			};
+
+			if (props.apikey) {
+				headers.apiKey = props.apikey;
+			}
+
+			return axios(`https://${props.service}?url=${encodeURIComponent(url)}`, { headers });
+		}
+
+		function getImageUrl(imageObject) {
+			if (typeof imageObject === 'string') return imageObject;
+			if (typeof imageObject === 'object' && imageObject.url) return imageObject.url;
+			return null;
+		}
+	},
+});
+
+function escapeRegExp(string) {
+	return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 </script>
 
 <style lang="css" scoped>
@@ -301,39 +305,43 @@ export default {
 	}
 }
 
-.linkpreview {
+.linkmeta {
 	border: var(--border-width) solid var(--border-normal);
 	border-radius: var(--border-radius);
 }
 
-.linkpreview:hover {
+.linkmeta:hover {
 	color: var(--v-input-color);
 	background-color: var(--background-page);
 	border-color: var(--border-normal-alt);
 }
 
-.linkpreview:focus-within {
+.linkmeta:focus-within {
 	color: var(--v-input-color);
 	background-color: var(--background-page);
 	border-color: var(--primary);
-}
-
-.a {
-	cursor: pointer;
-	text-decoration: underline;
 }
 
 .url-input {
 	--v-input-font-family: var(--family-monospace);
 }
 
-.url-input >>> .input {
+.url-input::v-deep(.input) {
 	border: none;
 }
 
 .loading {
 	animation: spin 1s infinite;
 	animation-timing-function: linear;
+}
+
+.spacer {
+	flex-grow: 1;
+}
+
+.noround {
+	border-top-right-radius: 0 !important;
+	border-top-left-radius: 0 !important;
 }
 
 .preview {
@@ -358,7 +366,7 @@ export default {
 }
 
 .preview .property:after {
-	content: ":";
+	content: ':';
 }
 
 .preview-item-image img,
@@ -373,7 +381,7 @@ export default {
 	height: 0;
 }
 
-.preview-item-iframe .iframe-wrapper-bound .iframe-wrapper >>> iframe {
+.preview-item-iframe .iframe-wrapper-bound .iframe-wrapper::v-deep(iframe) {
 	position: absolute !important;
 	top: 0 !important;
 	left: 0 !important;
