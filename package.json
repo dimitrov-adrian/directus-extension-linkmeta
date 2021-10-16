@@ -1,6 +1,6 @@
 {
   "name": "directus-extension-linkmeta",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/dimitrov-adrian/directus-extension-linkmeta.git"
@@ -19,7 +19,8 @@
   "scripts": {
     "dev:interface": "cd interface && npx directus-extension build -w",
     "build:interface": "cd interface && npx directus-extension build",
-    "test:endpoint": "node endpoint/test.js"
+    "test:endpoint": "node endpoint/test.js",
+    "cli": "node endpoint/cli.js"
   },
   "dependencies": {
     "directus-extension-linkmeta-interface": "file:./interface",
