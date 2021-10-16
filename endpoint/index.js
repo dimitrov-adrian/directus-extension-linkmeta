@@ -1,18 +1,20 @@
+const { defineEndpoint } = require('@directus/shared/utils');
 const processUrl = require('./fetcher-metascraper.js');
 
-module.exports = (/** @type {import('express').Application} */ router) => {
-	router.get('', async function linkMetaEndpoint(req, res) {
-		if (!req || !req?.accountability?.role) {
-			res.status(403).send({
-				status: 'fail',
-				message: 'FORBIDDEN',
-			});
-		} else {
-			try {
-				res.send(await processUrl(req.query.url.toString()));
-			} catch (error) {
-				res.send(error.toString());
-			}
+module.exports = defineEndpoint((router, { exceptions }) => {
+	router.get('/', async function linkMetaEndpoint(req, res, next) {
+		if (!req.accountability?.role) {
+			return next(new exceptions.ForbiddenException());
+		}
+
+		if (!req?.query?.url) {
+			return next(new exceptions.InvalidQueryException('Missing "url" query argument'));
+		}
+
+		try {
+			res.send(await processUrl(req.query.url.toString()));
+		} catch (error) {
+			return next(new exceptions.ServiceUnavailableException(error));
 		}
 	});
-};
+});
