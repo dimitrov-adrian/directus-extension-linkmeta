@@ -141,7 +141,6 @@ export default defineInterface({
 						{ value: 'api.microlink.io', text: 'microlink.io (Free)' },
 						{ value: 'pro.microlink.io', text: 'microlink.io (Pro)' },
 					],
-					allowOther: true,
 				},
 			},
 			schema: {
@@ -150,24 +149,26 @@ export default defineInterface({
 		},
 		{
 			field: 'apikey',
-			name: '$t:key',
+			name: '$t:fields.directus_users.token',
 			meta: {
-				width: 'full',
+				width: 'half',
 				interface: 'text-input',
+				hidden: true,
 				options: {
 					placeholder: '$t:fields.directus_users.token_placeholder',
 					iconLeft: 'vpn_key',
 					font: 'monospace',
+
 				},
 				conditions: [
 					{
 						name: 'hide',
 						rule: {
-							service: {
-								_eq: '',
-							},
+							"service": {
+								"_in": ['pro.microlink.io']
+							}
 						},
-						hidden: true,
+						hidden: false,
 					},
 				],
 			},
