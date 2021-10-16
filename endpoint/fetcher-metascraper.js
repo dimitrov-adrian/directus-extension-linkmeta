@@ -1,23 +1,23 @@
-import axios from 'axios';
-import metascraper from 'metascraper';
-import Metascraper_author from 'metascraper-author';
-import Metascraper_date from 'metascraper-date';
-import Metascraper_description from 'metascraper-description';
-import Metascraper_image from 'metascraper-image';
-import Metascraper_logo from 'metascraper-logo';
-import Metascraper_logo_favicon from 'metascraper-logo-favicon';
-import Metascraper_clearbit from 'metascraper-clearbit';
-import Metascraper_publisher from 'metascraper-publisher';
-import Metascraper_title from 'metascraper-title';
-import Metascraper_lang from 'metascraper-lang';
-import Metascraper_video from 'metascraper-video';
-import Metascraper_youtube from 'metascraper-youtube';
-import Metascraper_soundcloud from 'metascraper-soundcloud';
-import Metascraper_spotify from 'metascraper-spotify';
-import Metascraper_amazon from 'metascraper-amazon';
-import Metascraper_iframe from 'metascraper-iframe';
-import Metascraper_readability from 'metascraper-readability';
-import Metascraper_url from 'metascraper-url';
+const axios = require('axios');
+const metascraper = require('metascraper');
+const Metascraper_author = require('metascraper-author');
+const Metascraper_date = require('metascraper-date');
+const Metascraper_description = require('metascraper-description');
+const Metascraper_image = require('metascraper-image');
+const Metascraper_logo = require('metascraper-logo');
+const Metascraper_logo_favicon = require('metascraper-logo-favicon');
+const Metascraper_clearbit = require('metascraper-clearbit');
+const Metascraper_publisher = require('metascraper-publisher');
+const Metascraper_title = require('metascraper-title');
+const Metascraper_lang = require('metascraper-lang');
+const Metascraper_video = require('metascraper-video');
+const Metascraper_youtube = require('metascraper-youtube');
+const Metascraper_soundcloud = require('metascraper-soundcloud');
+const Metascraper_spotify = require('metascraper-spotify');
+const Metascraper_amazon = require('metascraper-amazon');
+const Metascraper_iframe = require('metascraper-iframe');
+const Metascraper_readability = require('metascraper-readability');
+const Metascraper_url = require('metascraper-url');
 
 const rules = [
 	Metascraper_youtube(),
@@ -40,10 +40,12 @@ const rules = [
 	Metascraper_url(),
 ];
 
+module.exports = processUrl;
+
 /**
  * @param {string} url
  */
-export default async function processUrl(url) {
+async function processUrl(url) {
 	if (!isUrl(url)) {
 		return {
 			status: 'error',

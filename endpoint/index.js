@@ -1,6 +1,6 @@
-import processUrl from './fetcher-metascraper.js';
+const processUrl = require('./fetcher-metascraper.js');
 
-export default (/** @type {import('express').Application} */ router) => {
+module.exports = (/** @type {import('express').Application} */ router) => {
 	router.get('', async function linkMetaEndpoint(req, res) {
 		if (!req || !req?.accountability?.role) {
 			res.status(403).send({
@@ -9,7 +9,7 @@ export default (/** @type {import('express').Application} */ router) => {
 			});
 		} else {
 			try {
-				res.send(await processUrl(req.query.url));
+				res.send(await processUrl(req.query.url.toString()));
 			} catch (error) {
 				res.send(error.toString());
 			}

@@ -1,6 +1,5 @@
-import assert from 'assert';
-import utils from 'util';
-import metascraper from './fetcher-metascraper.js';
+const assert = require('node:assert');
+const metascraper = require('./fetcher-metascraper.js');
 
 process.stdout.write('Running tests');
 
