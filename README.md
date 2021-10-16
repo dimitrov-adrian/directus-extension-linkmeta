@@ -1,6 +1,6 @@
 > ### This extension is in development and most probably will have file structure change when Directus 9 official releases. Meanwhile breaking changes are possible in anytime.
 
-![](https://repository-images.githubusercontent.com/318790147/a5879480-cd17-11eb-8375-7c68f2d2ebab)
+![](https://raw.githubusercontent.com/dimitrov-adrian/directus-extension-linkmeta/main/screenshot.png)
 
 ## Installation
 
