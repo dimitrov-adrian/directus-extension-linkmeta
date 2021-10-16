@@ -1,6 +1,8 @@
-const assert = require('assert');
-const utils = require('util');
-const metascraper = require('./fetcher-metascraper.js');
+import assert from 'assert';
+import utils from 'util';
+import metascraper from './fetcher-metascraper.js';
+
+process.stdout.write('Running tests');
 
 assert.doesNotReject(
 	metascraper('http/invalidurl').then((result) => {
@@ -23,7 +25,6 @@ assert.doesNotReject(
 		assert.strictEqual(result.data.url, 'https://www.youtube.com/watch?v=aqz-KE-bpKQ');
 		assert.strictEqual(result.data.title, 'Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film');
 		assert.match(result.data.description, /Blender/i);
-		console.log('OK Response', utils.inspect(result.data, true, 3, true));
 	})
 );
 
@@ -37,6 +38,5 @@ assert.doesNotReject(
 		assert.strictEqual(typeof result.data.url, 'string', 'URL is not string');
 		assert.strictEqual(typeof result.data.logo, 'string', 'Logo is not string');
 		assert.match(result.data.description, /🐰/i);
-		console.log('OK Response', utils.inspect(result.data, true, 3, true));
 	})
 );

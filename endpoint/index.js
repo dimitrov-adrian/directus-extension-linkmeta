@@ -1,8 +1,8 @@
-const processUrl = require('./fetcher-metascraper.js');
+import processUrl from './fetcher-metascraper.js';
 
-module.exports = (router) => {
+export default (/** @type {import('express').Application} */ router) => {
 	router.get('', async function linkMetaEndpoint(req, res) {
-		if (!req || !req.accountability || !req.accountability.role) {
+		if (!req || !req?.accountability?.role) {
 			res.status(403).send({
 				status: 'fail',
 				message: 'FORBIDDEN',

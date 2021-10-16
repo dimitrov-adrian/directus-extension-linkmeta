@@ -1,4 +1,6 @@
 {
+  "name": "directus-extension-linkmeta-endpoint",
+  "version": "1.0.0",
   "directus:extension": {
     "hidden": false,
     "host": "^v9.0.0-rc.95",
@@ -6,6 +8,5 @@
     "source": "index.js",
     "type": "endpoint"
   },
-  "name": "directus-extension-linkmeta-endpoint",
-  "version": "1.0.0"
+  "type": "module"
 }
