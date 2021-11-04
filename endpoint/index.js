@@ -3,7 +3,7 @@ const processUrl = require('./fetcher-metascraper.js');
 
 module.exports = defineEndpoint((router, { exceptions }) => {
 	router.get('/', async function linkMetaEndpoint(req, res, next) {
-		if (!req.accountability?.role) {
+		if (!req?.accountability?.role) {
 			return next(new exceptions.ForbiddenException());
 		}
 

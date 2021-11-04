@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "directus:extension": {
     "hidden": true,
-    "host": "^v9.0.0-rc.95",
+    "host": "^v9.0.0-rc.100",
     "path": "index.js",
     "source": "index.js",
     "type": "endpoint"
+  },
+  "scripts": {
+    "test": "node test.js"
   }
 }

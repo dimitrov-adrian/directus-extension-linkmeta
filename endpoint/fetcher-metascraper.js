@@ -1,6 +1,7 @@
 const axios = require('axios');
 const metascraper = require('metascraper');
 const Metascraper_author = require('metascraper-author');
+const Metascraper_manifest = require('metascraper-manifest');
 const Metascraper_date = require('metascraper-date');
 const Metascraper_description = require('metascraper-description');
 const Metascraper_image = require('metascraper-image');
@@ -38,6 +39,7 @@ const rules = [
 	Metascraper_readability(),
 	Metascraper_iframe(),
 	Metascraper_url(),
+	Metascraper_manifest(),
 ];
 
 module.exports = processUrl;

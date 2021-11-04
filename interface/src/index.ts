@@ -130,7 +130,7 @@ export default defineInterface({
 		},
 		{
 			field: 'service',
-			name: 'Scrape Service',
+			name: '$t:fields.directus_users.provider',
 			type: 'string',
 			meta: {
 				width: 'half',
