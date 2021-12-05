@@ -12,7 +12,7 @@
   "directus:extension": {
     "type": "pack",
     "hidden": false,
-    "host": "^v9.0.0-rc.100"
+    "host": "^v9.0.0"
   },
   "files": [
     "endpoint",
@@ -50,6 +50,6 @@
     "metascraper-youtube": "^5.25.0"
   },
   "devDependencies": {
-    "@directus/extensions-sdk": "^9.0.0-rc.101"
+    "@directus/extensions-sdk": "^9.2.0"
   }
 }

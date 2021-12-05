@@ -21,9 +21,9 @@
 		]
 	},
 	"include": [
-		"endpoint/**/*.js",
-		"interface/src/**/*.ts",
-		"interface/src/**/*.vue"
+		"interface/**/*.ts",
+		"interface/src/**/*.vue",
+		"endpoint/*.js"
 	],
 	"exclude": [
 		"node_modules"

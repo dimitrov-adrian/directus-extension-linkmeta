@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "directus:extension": {
     "hidden": true,
-    "host": "^v9.0.0-rc.100",
+    "host": "^v9.0.0",
     "path": "dist/index.js",
     "source": "src/index.ts",
     "type": "interface"
