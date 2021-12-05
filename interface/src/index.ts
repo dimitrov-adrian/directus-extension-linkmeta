@@ -1,7 +1,7 @@
-import { defineInterface } from '@directus/shared/utils';
+import { InterfaceConfig } from '@directus/shared/types';
 import InterfaceComponent from './interface.vue';
 
-export default defineInterface({
+export default {
 	id: 'extension-linkmeta',
 	name: 'Link Meta',
 	description: 'Store link metadata using Open Graph, JSON+LD, oEmbed or HTML metadata',
@@ -9,6 +9,7 @@ export default defineInterface({
 	component: InterfaceComponent,
 	recommendedDisplays: ['formatted-json-value'],
 	types: ['json'],
+	group: 'other',
 	options: [
 		{
 			field: 'placeholder',
@@ -158,15 +159,14 @@ export default defineInterface({
 					placeholder: '$t:fields.directus_users.token_placeholder',
 					iconLeft: 'vpn_key',
 					font: 'monospace',
-
 				},
 				conditions: [
 					{
 						name: 'hide',
 						rule: {
-							"service": {
-								"_in": ['pro.microlink.io']
-							}
+							service: {
+								_in: ['pro.microlink.io'],
+							},
 						},
 						hidden: false,
 					},
@@ -177,4 +177,4 @@ export default defineInterface({
 			},
 		},
 	],
-});
+} as InterfaceConfig;

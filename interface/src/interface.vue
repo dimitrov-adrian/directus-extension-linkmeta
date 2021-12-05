@@ -36,7 +36,12 @@
 			</v-notice>
 
 			<div v-else-if="preview.length > 0 && localValue" class="preview">
-				<div v-for="previewItem in preview" :key="previewItem" class="preview-item" :class="'preview-item-' + previewItem">
+				<div
+					v-for="previewItem in preview"
+					:key="previewItem"
+					class="preview-item"
+					:class="'preview-item-' + previewItem"
+				>
 					<div class="property">{{ previewItem }}</div>
 					<div class="value">
 						<img
@@ -51,13 +56,16 @@
 						>
 							{{ localValue[previewItem] }}
 						</a>
-						<div v-else-if="previewItem === 'iframe' && localValue[previewItem]" class="iframe-wrapper-bound" v-html="localValue[previewItem]" />
+						<div
+							v-else-if="previewItem === 'iframe' && localValue[previewItem]"
+							class="iframe-wrapper-bound"
+							v-html="localValue[previewItem]"
+						/>
 						<var v-else-if="localValue[previewItem]">{{ localValue[previewItem] }}</var>
 						<value-null v-else />
 					</div>
 				</div>
 			</div>
-
 		</transition-expand>
 	</div>
 </template>
@@ -71,8 +79,8 @@ import { defineComponent, ref, watch, computed, inject } from 'vue';
 export default defineComponent({
 	props: {
 		value: {
-			type: Object,
-			default: () => ({}),
+			type: [Object, null],
+			default: null,
 		},
 		disabled: {
 			type: Boolean,
@@ -119,10 +127,10 @@ export default defineComponent({
 	setup(props, { emit }) {
 		const { t } = useI18n();
 		const api = inject('api');
-		const error = ref(null);
-		const loading = ref(false);
-		const localUrl = ref(props.value && props.value.url ? props.value.url : '');
-		const localValue = ref(props.value);
+		const error = ref<string | null>(null);
+		const loading = ref<boolean>(false);
+		const localUrl = ref<string>(props.value && props.value.url ? props.value.url : '');
+		const localValue = ref<null | ({ url: string } & object)>(props.value);
 		const isValidUrl = computed(() => localUrl.value && isUrl(localUrl.value));
 		const isChanged = computed(() => localUrl.value !== (props.value && props.value.url ? props.value.url : ''));
 		const canRefresh = computed(
@@ -275,13 +283,14 @@ export default defineComponent({
 
 			return axios(`https://${props.service}?url=${encodeURIComponent(url)}`, { headers });
 		}
-
 	},
 });
 
-function getImageUrl(imageObject: {url: string} | string) {
+function getImageUrl(imageObject: { url: string } | string) {
 	if (typeof imageObject === 'string') return imageObject;
+
 	if (typeof imageObject === 'object' && imageObject.url) return imageObject.url;
+
 	return null;
 }
 
