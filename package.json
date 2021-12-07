@@ -25,10 +25,9 @@
     "cli": "node endpoint/cli.js"
   },
   "dependencies": {
-    "directus-extension-linkmeta-interface": "file:./interface",
     "directus-extension-linkmeta-endpoint": "file:./endpoint",
+    "directus-extension-linkmeta-interface": "file:./interface",
     "metascraper": "^5.25.0",
-    "metascraper-manifest": "^5.25.0",
     "metascraper-amazon": "^5.25.0",
     "metascraper-audio": "^5.25.0",
     "metascraper-author": "^5.25.0",
@@ -40,6 +39,7 @@
     "metascraper-lang": "^5.25.0",
     "metascraper-logo": "^5.25.0",
     "metascraper-logo-favicon": "^5.25.0",
+    "metascraper-manifest": "^5.25.0",
     "metascraper-publisher": "^5.25.0",
     "metascraper-readability": "^5.25.0",
     "metascraper-soundcloud": "^5.25.0",
@@ -50,6 +50,7 @@
     "metascraper-youtube": "^5.25.0"
   },
   "devDependencies": {
-    "@directus/extensions-sdk": "^9.2.0"
+    "@directus/extensions-sdk": "^9.2.0",
+    "@types/lodash": "^4.14.177"
   }
 }

@@ -71,15 +71,15 @@
 </template>
 
 <script lang="ts">
-import axios from 'axios';
+import axios, { AxiosPromise } from 'axios';
 import { throttle, debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
-import { defineComponent, ref, watch, computed, inject } from 'vue';
+import { defineComponent, ref, watch, computed, inject, PropType } from 'vue';
 
 export default defineComponent({
 	props: {
 		value: {
-			type: [Object, null],
+			type: Object as PropType<Record<string, any>>,
 			default: null,
 		},
 		disabled: {
@@ -111,15 +111,15 @@ export default defineComponent({
 			default: '',
 		},
 		urlAllowList: {
-			type: Array,
+			type: Array as PropType<string[]>,
 			default: () => [],
 		},
 		preview: {
-			type: Array,
+			type: Array as PropType<string[]>,
 			default: () => ['image', 'title', 'url'],
 		},
 		store: {
-			type: Array,
+			type: Array as PropType<string[]>,
 			default: () => ['image', 'url', 'title', 'publisher', 'author', 'date', 'lang', 'logo', 'iframe'],
 		},
 	},
@@ -130,7 +130,13 @@ export default defineComponent({
 		const error = ref<string | null>(null);
 		const loading = ref<boolean>(false);
 		const localUrl = ref<string>(props.value && props.value.url ? props.value.url : '');
-		const localValue = ref<null | ({ url: string } & object)>(props.value);
+		const localValue = ref<null | Record<string, any>>(props.value);
+
+		const fetchResults =
+			props.trigger === 'debounce'
+				? debounce(processUrl, Number(props.rate))
+				: throttle(processUrl, Number(props.rate));
+
 		const isValidUrl = computed(() => localUrl.value && isUrl(localUrl.value));
 		const isChanged = computed(() => localUrl.value !== (props.value && props.value.url ? props.value.url : ''));
 		const canRefresh = computed(
@@ -144,7 +150,7 @@ export default defineComponent({
 		);
 
 		const patterns = props.urlAllowList.map(
-			(pattern) => new RegExp(escapeRegExp(pattern).replace(/\\\*/giu, '.*'), 'i')
+			(pattern: string) => new RegExp(escapeRegExp(pattern).replace(/\\\*/giu, '.*'), 'i')
 		);
 
 		watch(
@@ -161,11 +167,6 @@ export default defineComponent({
 				}
 			}
 		);
-
-		const fetchResults =
-			props.trigger === 'debounce'
-				? debounce(processUrl, Number(props.rate))
-				: throttle(processUrl, Number(props.rate));
 
 		return {
 			t,
@@ -187,7 +188,7 @@ export default defineComponent({
 			onChange,
 		};
 
-		function onChange(newUrl) {
+		function onChange(newUrl: string) {
 			if (!newUrl) {
 				localUrl.value = '';
 				localValue.value = null;
@@ -195,7 +196,7 @@ export default defineComponent({
 			}
 
 			localUrl.value = newUrl.trim();
-			if (!isUrl(localUrl.value)) return;
+			if (!isValidUrl(localUrl.value)) return;
 
 			fetchResults(localUrl.value);
 		}
@@ -205,17 +206,26 @@ export default defineComponent({
 			processUrl(localUrl.value);
 		}
 
-		function isUrl(url) {
+		function isUrl(url: string): boolean {
 			try {
 				new URL(url);
+				return true;
 			} catch {
 				return false;
 			}
-
-			if (!patterns || patterns.length < 1) return true;
 		}
 
-		function processUrl(url) {
+		function isValidUrl(url: string): boolean {
+			if (isUrl(url)) {
+				if (!patterns || patterns.length < 1) return true;
+				if (!patterns.some((pattern) => pattern.test(url))) return false;
+				return true;
+			}
+
+			return false;
+		}
+
+		async function processUrl(url: string) {
 			if (!url) {
 				error.value = null;
 				localUrl.value = '';
@@ -223,12 +233,7 @@ export default defineComponent({
 				return;
 			}
 
-			if (!isUrl(url)) {
-				error.value = t('errors.INVALID_QUERY');
-				return;
-			}
-
-			if (patterns.some((pattern) => pattern.test(url))) {
+			if (!isValidUrl(url)) {
 				error.value = t('validationError.neq').replace('{invalid}', url);
 				return;
 			}
@@ -236,35 +241,33 @@ export default defineComponent({
 			loading.value = true;
 			error.value = null;
 
-			return createFetcher(url)
-				.then((response) => response.data)
-				.then((response) => {
-					if (response.status === 'success' && response.data) return response.data;
-
+			try {
+				const response = (await createFetcher(url)).data;
+				if (response.status !== 'success' || !response.data) {
 					throw Error(response.message);
-				})
-				.then((data) => {
-					if (props.store && props.store.length > 0) {
-						return Object.assign({}, ...props.store.map((key) => (key in data ? { [key]: data[key] } : {})));
-					}
+				}
 
-					return data;
-				})
-				.then((data) => {
-					// Store original URL
-					data.url = url;
+				const data: Record<string, any> = response.data;
+
+				// Force storing original URL.
+				data.url = url;
+
+				if (props.store && props.store.length > 0) {
+					emit(
+						'input',
+						Object.assign({}, ...props.store.map((key: string) => (key in data ? { [key]: data[key] } : {})))
+					);
+				} else {
 					emit('input', data);
-					return data;
-				})
-				.catch((err) => {
-					error.value = err.toString();
-				})
-				.finally(() => {
-					loading.value = false;
-				});
+				}
+			} catch (err) {
+				error.value = err.toString();
+			}
+
+			loading.value = false;
 		}
 
-		function createFetcher(url) {
+		function createFetcher(url: string): AxiosPromise<any> {
 			if (!props.service) {
 				return api.get(`/directus-extension-linkmeta-endpoint?url=${encodeURIComponent(url)}`, {
 					headers: {
@@ -290,8 +293,6 @@ function getImageUrl(imageObject: { url: string } | string) {
 	if (typeof imageObject === 'string') return imageObject;
 
 	if (typeof imageObject === 'object' && imageObject.url) return imageObject.url;
-
-	return null;
 }
 
 function escapeRegExp(str: string) {
