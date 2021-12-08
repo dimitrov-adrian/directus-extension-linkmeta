@@ -10,8 +10,7 @@
 		>
 			<template #prepend>
 				<v-icon v-if="loading" v-tooltip="t('loading')" class="loading" name="motion_photos_on" />
-				<v-icon v-else-if="localUrl && !isValidUrl" v-tooltip="t('errors.INVALID_QUERY')" name="priority_high" />
-				<v-icon v-else-if="!isChanged" v-tooltip="t('success')" name="done_all" />
+				<v-icon v-else-if="!isChanged && value" v-tooltip="t('success')" name="done_all" />
 				<v-icon v-else name="link" />
 			</template>
 
@@ -20,22 +19,16 @@
 			</template>
 		</v-input>
 
-		<transition-expand>
-			<v-notice v-if="error" type="warning" class="noround">
-				{{ error }}
-				<div class="spacer" />
-				<button v-if="isChanged" @click="() => emit('input', { url: localUrl })">Set it anyway</button>
-			</v-notice>
-
-			<v-notice
-				v-else-if="localValue && localValue.url && Object.keys(localValue).length === 1"
-				type="warning"
-				class="noround"
-			>
+		<div>
+			<v-notice v-if="localUrl && value && Object.keys(value).length === 1" type="warning" class="noround">
 				{{ t('errors.INVALID_PAYLOAD') }}
 			</v-notice>
 
-			<div v-else-if="preview.length > 0 && localValue" class="preview">
+			<v-notice v-else-if="error" type="warning" class="noround">
+				{{ error }}
+			</v-notice>
+
+			<div v-else-if="preview.length > 0 && value" class="preview">
 				<div
 					v-for="previewItem in preview"
 					:key="previewItem"
@@ -45,28 +38,28 @@
 					<div class="property">{{ previewItem }}</div>
 					<div class="value">
 						<img
-							v-if="['image', 'logo'].includes(previewItem) && localValue[previewItem]"
-							:src="getImageUrl(localValue[previewItem])"
+							v-if="['image', 'logo'].includes(previewItem) && value[previewItem]"
+							:src="getImageUrl(value[previewItem])"
 						/>
 						<a
-							v-else-if="previewItem === 'url' && localValue[previewItem]"
-							:href="localValue[previewItem]"
+							v-else-if="previewItem === 'url' && value[previewItem]"
+							:href="value[previewItem]"
 							rel="noopener"
 							target="_blank"
 						>
-							{{ localValue[previewItem] }}
+							{{ value[previewItem] }}
 						</a>
 						<div
-							v-else-if="previewItem === 'iframe' && localValue[previewItem]"
+							v-else-if="previewItem === 'iframe' && value[previewItem]"
 							class="iframe-wrapper-bound"
-							v-html="localValue[previewItem]"
+							v-html="value[previewItem]"
 						/>
-						<var v-else-if="localValue[previewItem]">{{ localValue[previewItem] }}</var>
+						<var v-else-if="value[previewItem]">{{ value[previewItem] }}</var>
 						<value-null v-else />
 					</div>
 				</div>
 			</div>
-		</transition-expand>
+		</div>
 	</div>
 </template>
 
@@ -130,40 +123,27 @@ export default defineComponent({
 		const error = ref<string | null>(null);
 		const loading = ref<boolean>(false);
 		const localUrl = ref<string>(props.value && props.value.url ? props.value.url : '');
-		const localValue = ref<null | Record<string, any>>(props.value);
 
 		const fetchResults =
 			props.trigger === 'debounce'
 				? debounce(processUrl, Number(props.rate))
 				: throttle(processUrl, Number(props.rate));
 
-		const isValidUrl = computed(() => localUrl.value && isUrl(localUrl.value));
-		const isChanged = computed(() => localUrl.value !== (props.value && props.value.url ? props.value.url : ''));
-		const canRefresh = computed(
-			() =>
-				isValidUrl.value &&
-				props.value &&
-				props.value.url &&
-				localValue.value &&
-				localValue.value.url &&
-				localValue.value.url === props.value.url
+		const patterns = props.urlAllowList.map(
+			(pattern) => new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/giu, '.*'), 'i')
 		);
 
-		const patterns = props.urlAllowList.map(
-			(pattern: string) => new RegExp(escapeRegExp(pattern).replace(/\\\*/giu, '.*'), 'i')
-		);
+		const isChanged = computed(() => localUrl.value !== (props.value && props.value.url ? props.value.url : ''));
+
+		const canRefresh = computed(() => props.value && props.value.url && isChanged);
 
 		watch(
 			() => props.value,
 			(newVal, oldVal) => {
 				if (oldVal === newVal) return;
 
-				if (!newVal) {
-					localUrl.value = '';
-					localValue.value = {};
-				} else if (newVal && newVal.url) {
+				if (newVal && newVal.url) {
 					localUrl.value = newVal.url;
-					localValue.value = newVal;
 				}
 			}
 		);
@@ -175,11 +155,8 @@ export default defineComponent({
 			loading,
 
 			localUrl,
-			localValue,
 
-			isValidUrl,
 			isChanged,
-			isUrl,
 			canRefresh,
 
 			getImageUrl,
@@ -188,41 +165,36 @@ export default defineComponent({
 			onChange,
 		};
 
-		function onChange(newUrl: string) {
-			if (!newUrl) {
-				localUrl.value = '';
-				localValue.value = null;
-				return;
-			}
-
-			localUrl.value = newUrl.trim();
-			if (!isValidUrl(localUrl.value)) return;
-
-			fetchResults(localUrl.value);
+		function isUrlAllowed(url: string): boolean {
+			if (!patterns || patterns.length < 1) return true;
+			return patterns.some((pattern) => pattern.test(url));
 		}
 
-		function onRefresh() {
-			if (localUrl.value && !isValidUrl.value) return;
-			processUrl(localUrl.value);
-		}
+		function isValidUrl(url: string): boolean {
+			if (!url) return false;
 
-		function isUrl(url: string): boolean {
 			try {
 				new URL(url);
-				return true;
+				return isUrlAllowed(url);
 			} catch {
 				return false;
 			}
 		}
 
-		function isValidUrl(url: string): boolean {
-			if (isUrl(url)) {
-				if (!patterns || patterns.length < 1) return true;
-				if (!patterns.some((pattern) => pattern.test(url))) return false;
-				return true;
+		function onChange(newUrl: string) {
+			if (!newUrl) {
+				localUrl.value = '';
+				error.value = null;
+				emit('input', null);
+				return;
 			}
 
-			return false;
+			localUrl.value = newUrl.trim();
+			fetchResults(localUrl.value);
+		}
+
+		function onRefresh() {
+			processUrl(localUrl.value);
 		}
 
 		async function processUrl(url: string) {
@@ -234,7 +206,8 @@ export default defineComponent({
 			}
 
 			if (!isValidUrl(url)) {
-				error.value = t('validationError.neq').replace('{invalid}', url);
+				error.value = t('errors.INVALID_QUERY');
+				emit('input', null);
 				return;
 			}
 
@@ -262,6 +235,7 @@ export default defineComponent({
 				}
 			} catch (err) {
 				error.value = err.toString();
+				emit('input', null);
 			}
 
 			loading.value = false;
@@ -293,10 +267,6 @@ function getImageUrl(imageObject: { url: string } | string) {
 	if (typeof imageObject === 'string') return imageObject;
 
 	if (typeof imageObject === 'object' && imageObject.url) return imageObject.url;
-}
-
-function escapeRegExp(str: string) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 </script>
 
