@@ -1,4 +1,4 @@
-const axios = require('axios');
+const got = require('got');
 const metascraper = require('metascraper');
 const Metascraper_author = require('metascraper-author');
 const Metascraper_manifest = require('metascraper-manifest');
@@ -20,7 +20,7 @@ const Metascraper_iframe = require('metascraper-iframe');
 const Metascraper_readability = require('metascraper-readability');
 const Metascraper_url = require('metascraper-url');
 
-const rules = [
+const metascrape = metascraper([
 	Metascraper_youtube(),
 	Metascraper_soundcloud(),
 	Metascraper_spotify(),
@@ -40,15 +40,15 @@ const rules = [
 	Metascraper_iframe(),
 	Metascraper_url(),
 	Metascraper_manifest(),
-];
+]);
 
 module.exports = processUrl;
 
 /**
- * @param {string} url
+ * @param {string} targetUrl
  */
-async function processUrl(url) {
-	if (!isUrl(url)) {
+async function processUrl(targetUrl) {
+	if (!isUrl(targetUrl)) {
 		return {
 			status: 'error',
 			message: 'INVALID_URL',
@@ -56,11 +56,11 @@ async function processUrl(url) {
 	}
 
 	try {
-		const response = await axios.get(url);
-		const data = await metascraper(rules)({
-			html: response && response.data ? response.data : '',
-			url,
-		});
+		// There is some issue with the scraping, it could crash the directus app
+		// https://github.com/sindresorhus/got/issues/1489
+
+		const { body: html, url } = await got(targetUrl);
+		const data = await metascrape({ html, url });
 
 		return {
 			status: 'success',
