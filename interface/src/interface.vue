@@ -340,7 +340,7 @@ function getImageUrl(imageObject: { url: string } | string) {
 
 .preview-item .property {
 	border-right: var(--border-width) solid var(--border-subdued);
-	width: 150px;
+	width: 120px;
 	font-weight: 600;
 	text-align: right;
 }
@@ -348,6 +348,7 @@ function getImageUrl(imageObject: { url: string } | string) {
 .preview a {
 	color: var(--primary);
 	text-decoration: underline;
+	overflow-wrap: break-word;
 }
 
 .preview-item img {
