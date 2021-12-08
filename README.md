@@ -5,7 +5,7 @@
 In your Directus installation root
 
 ```bash
-npm install dimitrov-adrian/directus-extension-linkmeta
+npm install directus-extension-linkmeta
 ```
 
 Restart directus
