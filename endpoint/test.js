@@ -1,4 +1,4 @@
-const assert = require('node:assert');
+const assert = require('assert');
 const metascraper = require('./fetcher-metascraper.js');
 
 process.stdout.write('Running tests');

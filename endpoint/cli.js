@@ -1,4 +1,4 @@
-const utils = require('node:util');
+const utils = require('util');
 const metascraper = require('./fetcher-metascraper.js');
 
 (async (url) => {

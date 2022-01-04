@@ -2,7 +2,9 @@ const { defineEndpoint } = require('@directus/shared/utils');
 const processUrl = require('./fetcher-metascraper.js');
 
 module.exports = defineEndpoint((router, { exceptions }) => {
-	router.get('/', async function linkMetaEndpoint(req, res, next) {
+	router.get('/', linkMetaEndpoint);
+
+	async function linkMetaEndpoint(req, res, next) {
 		if (!req?.accountability?.role) {
 			return next(new exceptions.ForbiddenException());
 		}
@@ -16,5 +18,5 @@ module.exports = defineEndpoint((router, { exceptions }) => {
 		} catch (error) {
 			return next(new exceptions.ServiceUnavailableException(error));
 		}
-	});
+	}
 });

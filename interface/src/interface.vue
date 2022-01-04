@@ -24,8 +24,8 @@
 				{{ t('errors.INVALID_PAYLOAD') }}
 			</v-notice>
 
-			<v-notice v-else-if="error" type="warning" class="noround">
-				{{ error }}
+			<v-notice v-else-if="currentError" type="warning" class="noround">
+				{{ currentError }}
 			</v-notice>
 
 			<div v-else-if="preview.length > 0 && value" class="preview">
@@ -64,7 +64,7 @@
 </template>
 
 <script lang="ts">
-import axios, { AxiosPromise } from 'axios';
+import axios, { AxiosPromise, Axios } from 'axios';
 import { throttle, debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { defineComponent, ref, watch, computed, inject, PropType } from 'vue';
@@ -119,8 +119,8 @@ export default defineComponent({
 	emits: ['input'],
 	setup(props, { emit }) {
 		const { t } = useI18n();
-		const api = inject('api');
-		const error = ref<string | null>(null);
+		const api = inject('api') as Axios;
+		const currentError = ref<string | null>(null);
 		const loading = ref<boolean>(false);
 		const localUrl = ref<string>(props.value && props.value.url ? props.value.url : '');
 
@@ -151,7 +151,7 @@ export default defineComponent({
 		return {
 			t,
 
-			error,
+			currentError,
 			loading,
 
 			localUrl,
@@ -184,7 +184,7 @@ export default defineComponent({
 		function onChange(newUrl: string) {
 			if (!newUrl) {
 				localUrl.value = '';
-				error.value = null;
+				currentError.value = null;
 				emit('input', null);
 				return;
 			}
@@ -199,20 +199,20 @@ export default defineComponent({
 
 		async function processUrl(url: string) {
 			if (!url) {
-				error.value = null;
+				currentError.value = null;
 				localUrl.value = '';
 				emit('input', null);
 				return;
 			}
 
 			if (!isValidUrl(url)) {
-				error.value = t('errors.INVALID_QUERY');
+				currentError.value = t('errors.INVALID_QUERY');
 				emit('input', null);
 				return;
 			}
 
 			loading.value = true;
-			error.value = null;
+			currentError.value = null;
 
 			try {
 				const response = (await createFetcher(url)).data;
@@ -233,8 +233,13 @@ export default defineComponent({
 				} else {
 					emit('input', data);
 				}
-			} catch (err) {
-				error.value = err.toString();
+			} catch (error: any) {
+				if (error) {
+					currentError.value = error.toString();
+				} else {
+					currentError.value = t('unexpected_error');
+				}
+
 				emit('input', null);
 			}
 
@@ -250,7 +255,7 @@ export default defineComponent({
 				});
 			}
 
-			const headers = {
+			const headers: Record<string, any> = {
 				'Content-Type': 'application/json',
 			};
 
@@ -317,14 +322,14 @@ function getImageUrl(imageObject: { url: string } | string) {
 }
 
 .preview {
-	background-color: var(--v-card-background-color);
-	border-top: var(--border-width) solid var(--border-normal);
-	border-bottom-left-radius: var(--border-radius);
-	border-bottom-right-radius: var(--border-radius);
 	display: table;
-	table-layout: fixed;
 	width: 100%;
 	vertical-align: top;
+	table-layout: fixed;
+	background-color: var(--v-card-background-color);
+	border-top: var(--border-width) solid var(--border-normal);
+	border-bottom-right-radius: var(--border-radius);
+	border-bottom-left-radius: var(--border-radius);
 }
 
 .preview-item {
@@ -334,15 +339,15 @@ function getImageUrl(imageObject: { url: string } | string) {
 .preview-item .property,
 .preview-item .value {
 	display: table-cell;
-	vertical-align: top;
 	padding: 8px;
+	vertical-align: top;
 }
 
 .preview-item .property {
-	border-right: var(--border-width) solid var(--border-subdued);
 	width: 120px;
 	font-weight: 600;
 	text-align: right;
+	border-right: var(--border-width) solid var(--border-subdued);
 }
 
 .preview a {
@@ -352,10 +357,10 @@ function getImageUrl(imageObject: { url: string } | string) {
 }
 
 .preview-item img {
-	max-width: 100%;
-	max-height: 240px;
-	height: auto;
 	width: auto;
+	max-width: 100%;
+	height: auto;
+	max-height: 240px;
 	object-fit: contain;
 }
 

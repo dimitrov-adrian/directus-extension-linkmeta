@@ -51,7 +51,7 @@ async function processUrl(targetUrl) {
 	if (!isUrl(targetUrl)) {
 		return {
 			status: 'error',
-			message: 'INVALID_URL',
+			message: 'errors.INVALID_QUERY',
 		};
 	}
 
@@ -69,7 +69,7 @@ async function processUrl(targetUrl) {
 	} catch (error) {
 		return {
 			status: 'error',
-			message: error.toString(),
+			message: error ? error.toString() : 'errors.UNKNOWN',
 		};
 	}
 }
