@@ -1,4 +1,6 @@
+/** @type {import('got').Got} */
 const got = require('got');
+
 const metascraper = require('metascraper');
 const Metascraper_author = require('metascraper-author');
 const Metascraper_manifest = require('metascraper-manifest');
@@ -20,26 +22,31 @@ const Metascraper_iframe = require('metascraper-iframe');
 const Metascraper_readability = require('metascraper-readability');
 const Metascraper_url = require('metascraper-url');
 
+// There is some issue with the scraping, it could crash the directus app
+// https://github.com/sindresorhus/got/issues/1489
+// Found that it is caused only for http2 requests, as gmail.com,... etc.
+const gotOpts = { decompress: true, http2: true };
+
 const metascrape = metascraper([
-	Metascraper_youtube(),
-	Metascraper_soundcloud(),
-	Metascraper_spotify(),
-	Metascraper_amazon(),
-	Metascraper_author(),
-	Metascraper_date(),
-	Metascraper_description(),
-	Metascraper_image(),
-	Metascraper_logo_favicon(),
-	Metascraper_logo(),
-	Metascraper_clearbit(),
-	Metascraper_publisher(),
-	Metascraper_title(),
-	Metascraper_lang(),
-	Metascraper_video(),
-	Metascraper_readability(),
-	Metascraper_iframe(),
-	Metascraper_url(),
-	Metascraper_manifest(),
+	Metascraper_youtube({ gotOpts }),
+	Metascraper_soundcloud({ gotOpts }),
+	Metascraper_spotify({ gotOpts }),
+	Metascraper_amazon({ gotOpts }),
+	Metascraper_author({ gotOpts }),
+	Metascraper_date({ gotOpts }),
+	Metascraper_description({ gotOpts }),
+	Metascraper_image({ gotOpts }),
+	Metascraper_logo_favicon({ gotOpts }),
+	Metascraper_logo({ gotOpts }),
+	Metascraper_clearbit({ gotOpts }),
+	Metascraper_publisher({ gotOpts }),
+	Metascraper_title({ gotOpts }),
+	Metascraper_lang({ gotOpts }),
+	Metascraper_video({ gotOpts }),
+	Metascraper_readability({ gotOpts }),
+	Metascraper_iframe({ gotOpts }),
+	Metascraper_url({ gotOpts }),
+	Metascraper_manifest({ gotOpts }),
 ]);
 
 module.exports = processUrl;
@@ -56,17 +63,14 @@ async function processUrl(targetUrl) {
 	}
 
 	try {
-		// There is some issue with the scraping, it could crash the directus app
-		// https://github.com/sindresorhus/got/issues/1489
-
-		const { body: html, url } = await got(targetUrl);
+		const { body: html, url } = await got(targetUrl, gotOpts);
 		const data = await metascrape({ html, url });
 
 		return {
 			status: 'success',
 			data,
 		};
-	} catch (error) {
+	} catch (/** @type {any} */ error) {
 		return {
 			status: 'error',
 			message: error ? error.toString() : 'errors.UNKNOWN',
