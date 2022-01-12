@@ -38,22 +38,19 @@
 					<div class="property">{{ previewItem }}</div>
 					<div class="value">
 						<img
-							v-if="['image', 'logo'].includes(previewItem) && value[previewItem]"
+							v-if="!service && ['image', 'logo'].includes(previewItem) && value[previewItem]"
 							:src="getImageUrl(value[previewItem])"
 						/>
+
 						<a
-							v-else-if="previewItem === 'url' && value[previewItem]"
+							v-else-if="['image', 'logo', 'url'].includes(previewItem) && value[previewItem]"
 							:href="value[previewItem]"
 							rel="noopener"
 							target="_blank"
 						>
 							{{ value[previewItem] }}
 						</a>
-						<div
-							v-else-if="previewItem === 'iframe' && value[previewItem]"
-							class="iframe-wrapper-bound"
-							v-html="value[previewItem]"
-						/>
+
 						<var v-else-if="value[previewItem]">{{ value[previewItem] }}</var>
 						<value-null v-else />
 					</div>
@@ -265,14 +262,25 @@ export default defineComponent({
 
 			return axios(`https://${props.service}?url=${encodeURIComponent(url)}`, { headers });
 		}
+
+		function getToken(): string | null {
+			return api.defaults.headers.common['Authorization']?.split(' ')[1] || null;
+		}
+
+		function getImageUrl(imageObject: { url: string } | string) {
+			const imgSrc =
+				typeof imageObject === 'string'
+					? imageObject
+					: typeof imageObject === 'object' && imageObject.url
+					? imageObject.url
+					: null;
+
+			if (!imgSrc) return;
+
+			return `/directus-extension-linkmeta-endpoint/img?url=${encodeURIComponent(imgSrc)}&access_token=${getToken()}`;
+		}
 	},
 });
-
-function getImageUrl(imageObject: { url: string } | string) {
-	if (typeof imageObject === 'string') return imageObject;
-
-	if (typeof imageObject === 'object' && imageObject.url) return imageObject.url;
-}
 </script>
 
 <style lang="css" scoped>
@@ -339,7 +347,7 @@ function getImageUrl(imageObject: { url: string } | string) {
 .preview-item .property,
 .preview-item .value {
 	display: table-cell;
-	padding: 8px;
+	padding: 0.4em;
 	vertical-align: top;
 }
 
@@ -350,40 +358,28 @@ function getImageUrl(imageObject: { url: string } | string) {
 	border-right: var(--border-width) solid var(--border-subdued);
 }
 
-.preview a {
+.preview-item .value var {
+	white-space: pre-wrap;
+	cursor: text;
+	user-select: all;
+}
+
+.preview-item .value a {
 	color: var(--primary);
 	text-decoration: underline;
 	overflow-wrap: break-word;
+	user-select: all;
 }
 
-.preview-item img {
+.preview-item .value img {
 	width: auto;
 	max-width: 100%;
 	height: auto;
-	max-height: 240px;
+	max-height: 16em;
 	object-fit: contain;
 }
 
-.preview-item-logo img {
-	max-height: 96px;
-}
-
-.preview-item-iframe .value {
-	width: 360px;
-	max-width: 100%;
-}
-
-.iframe-wrapper-bound {
-	position: relative;
-	height: 0;
-	padding-bottom: 56.25%;
-}
-
-.iframe-wrapper-bound :deep(iframe) {
-	position: absolute !important;
-	top: 0 !important;
-	left: 0 !important;
-	width: 100% !important;
-	height: 100% !important;
+.preview-item.preview-item-logo .value img {
+	max-height: 4em;
 }
 </style>
