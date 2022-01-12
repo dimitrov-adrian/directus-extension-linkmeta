@@ -16,6 +16,24 @@ assert.doesNotReject(
 );
 
 assert.doesNotReject(
+	metascraper('https://gmail.com').then((result) => {
+		assert.strictEqual(result.status, 'success');
+		assert.strictEqual(typeof result.data, 'object');
+		assert.strictEqual(result.data.publisher, 'Google');
+	}),
+	'Test with http2 domain'
+);
+
+assert.doesNotReject(
+	metascraper('https://http2.github.io/').then((result) => {
+		assert.strictEqual(result.status, 'success');
+		assert.strictEqual(typeof result.data, 'object');
+		assert.strictEqual(result.data.publisher, 'HTTP/2');
+	}),
+	'Test with http2 domain'
+);
+
+assert.doesNotReject(
 	metascraper('https://www.youtube.com/watch?v=aqz-KE-bpKQ').then((result) => {
 		assert.strictEqual(result.status, 'success');
 		assert.strictEqual(typeof result.data, 'object');
