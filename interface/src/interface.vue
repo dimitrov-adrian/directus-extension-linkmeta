@@ -9,13 +9,14 @@
 			@update:model-value="onChange"
 		>
 			<template #prepend>
-				<v-icon v-if="loading" v-tooltip="t('loading')" class="loading" name="motion_photos_on" />
+				<v-icon v-if="loading" name="more_horiz" />
 				<v-icon v-else-if="!isChanged && value" v-tooltip="t('success')" name="done_all" />
 				<v-icon v-else name="link" />
 			</template>
 
-			<template v-if="!loading" #append>
-				<v-icon v-if="canRefresh" v-tooltip="t('update')" name="refresh" @click="onRefresh" />
+			<template #append>
+				<v-icon v-if="loading" v-tooltip="t('loading')" class="loading" name="motion_photos_on" />
+				<v-icon v-else-if="canRefresh" v-tooltip="t('update')" class="refresh" name="refresh" @click="onRefresh" />
 			</template>
 		</v-input>
 
@@ -52,6 +53,7 @@
 						</a>
 
 						<var v-else-if="value[previewItem]">{{ value[previewItem] }}</var>
+
 						<value-null v-else />
 					</div>
 				</div>
@@ -315,6 +317,10 @@ export default defineComponent({
 	border: none;
 }
 
+.refresh {
+	cursor: pointer;
+}
+
 .loading {
 	animation: spin 1s infinite;
 	animation-timing-function: linear;
@@ -375,7 +381,7 @@ export default defineComponent({
 	width: auto;
 	max-width: 100%;
 	height: auto;
-	max-height: 16em;
+	max-height: 24vh;
 	object-fit: contain;
 }
 
