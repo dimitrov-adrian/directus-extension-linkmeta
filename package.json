@@ -1,6 +1,6 @@
 {
   "name": "directus-extension-linkmeta",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/dimitrov-adrian/directus-extension-linkmeta.git"
@@ -23,7 +23,7 @@
     "!interface/tsconfig.json"
   ],
   "scripts": {
-    "build": "(cd interface && npx directus-extension build)",
+    "build": "(cd interface && directus-extension build)",
     "cli": "node endpoint/cli.js"
   },
   "dependencies": {
