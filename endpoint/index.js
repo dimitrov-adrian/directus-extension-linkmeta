@@ -7,13 +7,9 @@ const processUrl = require('./fetcher-metascraper.js');
 
 module.exports = defineEndpoint((router, { exceptions }) => {
 	router.get('/', async (req, res, next) => {
-		if (!req?.accountability?.role) {
-			return next(new exceptions.ForbiddenException());
-		}
+		if (!req?.accountability?.role) return next(new exceptions.ForbiddenException());
 
-		if (!req?.query?.url) {
-			return next(new exceptions.InvalidQueryException('Missing "url" query argument'));
-		}
+		if (!req?.query?.url) return next(new exceptions.InvalidQueryException('Missing "url" query argument'));
 
 		try {
 			return res.send(await processUrl(req.query.url.toString()));
@@ -23,13 +19,9 @@ module.exports = defineEndpoint((router, { exceptions }) => {
 	});
 
 	router.get('/img', async (req, res, next) => {
-		if (!req?.accountability?.role) {
-			return next(new exceptions.ForbiddenException());
-		}
+		if (!req?.accountability?.role) return next(new exceptions.ForbiddenException());
 
-		if (!req?.query?.url) {
-			return next(new exceptions.InvalidQueryException('Missing "url" query argument'));
-		}
+		if (!req?.query?.url) return next(new exceptions.InvalidQueryException('Missing "url" query argument'));
 
 		try {
 			const data = await got(req?.query?.url, { decompress: true, http2: true });

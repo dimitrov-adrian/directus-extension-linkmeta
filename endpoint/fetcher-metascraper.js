@@ -63,8 +63,12 @@ async function processUrl(targetUrl) {
 	}
 
 	try {
-		const { body: html, url } = await got(targetUrl, gotOpts);
+		const { body: html, url, headers } = await got(targetUrl, gotOpts);
 		const data = await metascrape({ html, url });
+
+		if (/^image\//.test(headers['content-type'] || '')) {
+			data.image = url;
+		}
 
 		return {
 			status: 'success',
