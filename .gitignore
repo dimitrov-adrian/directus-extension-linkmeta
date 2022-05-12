@@ -1,2 +1,4 @@
 node_modules
 interface/dist
+interface/package-lock.json
+endpoint/package-lock.json
