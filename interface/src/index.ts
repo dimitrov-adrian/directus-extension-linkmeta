@@ -1,7 +1,7 @@
-import { InterfaceConfig } from '@directus/shared/types';
+import { defineInterface } from '@directus/shared/utils';
 import InterfaceComponent from './interface.vue';
 
-export default {
+export default defineInterface({
 	id: 'extension-linkmeta',
 	name: 'Link Meta',
 	description: 'Store link metadata using Open Graph, JSON+LD, oEmbed or HTML metadata',
@@ -178,4 +178,4 @@ export default {
 			},
 		},
 	],
-} as InterfaceConfig;
+});

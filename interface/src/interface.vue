@@ -6,6 +6,7 @@
 			:placeholder="placeholder"
 			:model-value="localUrl"
 			class="url-input"
+			:small="preview.length > 0 && value"
 			@update:model-value="onChange"
 		>
 			<template #prepend>
@@ -128,7 +129,7 @@ export default defineComponent({
 				? debounce(processUrl, Number(props.rate))
 				: throttle(processUrl, Number(props.rate));
 
-		const patterns = props.urlAllowList.map(
+		const patterns: RegExp[] = props.urlAllowList.map(
 			(pattern) => new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/giu, '.*'), 'i')
 		);
 
@@ -166,7 +167,7 @@ export default defineComponent({
 
 		function isUrlAllowed(url: string): boolean {
 			if (!patterns || patterns.length < 1) return true;
-			return patterns.some((pattern) => pattern.test(url));
+			return patterns.some((pattern: RegExp) => pattern.test(url));
 		}
 
 		function isValidUrl(url: string): boolean {
