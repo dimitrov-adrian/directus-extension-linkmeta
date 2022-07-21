@@ -1,5 +1,10 @@
 ![](https://raw.githubusercontent.com/dimitrov-adrian/directus-extension-linkmeta/main/screenshot.png)
 
+## Requirements
+
+- NPM > v7
+- Directus >= v9.8.0
+
 ## Installation
 
 In your Directus installation root
